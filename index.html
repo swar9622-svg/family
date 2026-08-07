@@ -17,7 +17,9 @@
     --teal-deep:#142826;
     --male:#1f3d3b;
     --female:#8a3b3b;
-    --line:#b9902f;
+    --line:#a9762f;
+    --bar-dark:#2b2118;
+    --bar-light:#4a3826;
   }
   *{box-sizing:border-box;}
   html,body{
@@ -40,11 +42,12 @@
     flex:0 0 auto;
     position:relative; z-index:50;
     display:flex; align-items:center; justify-content:space-between;
-    padding:14px 22px;
-    background:linear-gradient(180deg, var(--teal-deep), var(--teal));
+    padding:8px 16px;
+    background:linear-gradient(180deg, var(--bar-dark), var(--bar-light));
     color:var(--paper);
-    box-shadow:0 4px 18px rgba(0,0,0,.35);
-    flex-wrap:wrap; gap:10px;
+    box-shadow:0 2px 10px rgba(0,0,0,.28);
+    flex-wrap:wrap; gap:8px;
+    border-bottom:1px solid #d8b76840;
   }
 
   /* main content area holds viewport + empty state, bounded by flex not 100vh */
@@ -58,20 +61,21 @@
       var(--paper);
   }
   #topbar h1{
-    font-size:22px; margin:0; font-weight:700; letter-spacing:1px;
+    font-size:16px; margin:0; font-weight:700; letter-spacing:.5px;
     color:var(--gold-light);
+    font-family:'Amiri Quran', 'Amiri', serif;
   }
-  #topbar .sub{ font-size:12.5px; opacity:.75; margin-top:2px; }
-  #controls{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  #topbar .sub{ font-size:10px; opacity:.6; margin-top:1px; }
+  #controls{ display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
   button{
     font-family:'Amiri', serif;
     background:var(--gold);
     color:#241c14;
     border:none;
-    padding:9px 16px;
+    padding:6px 12px;
     border-radius:6px;
     cursor:pointer;
-    font-size:14.5px;
+    font-size:12.5px;
     font-weight:700;
     transition:transform .15s, background .15s;
   }
@@ -126,11 +130,11 @@
     content:"";
     position:absolute; top:0; right:50%;
     width:50%; height:34px;
-    border-top:2px solid var(--line);
+    border-top:2.5px solid var(--line);
   }
   .tree ul li::after{
     right:auto; left:50%;
-    border-left:2px solid var(--line); /* vertical stub down to this card */
+    border-left:2.5px solid var(--line); /* vertical stub down to this card */
   }
 
   /* trim the bus line so it doesn't overshoot the outermost siblings */
@@ -141,7 +145,7 @@
      never sits flush against its parent */
   .tree ul li:only-child{ padding-top:34px; }
   .tree ul li:only-child::before{ display:none; }
-  .tree ul li:only-child::after{ left:50%; width:0; border-top:none; }
+  .tree ul li:only-child::after{ left:50%; width:0; border-top:none; border-left-width:2.5px; }
 
   .card{
     display:inline-flex; flex-direction:column; align-items:center;
@@ -234,14 +238,14 @@
 <div id="topbar">
   <div>
     <h1>شجرة العائلة</h1>
-    <div class="sub">تُبنى الشجرة عبر الأبناء الذكور فقط — البنات يظهرن كأوراق نهائية دون تفرّع</div>
+    <div class="sub">الأبناء يواصلون الشجرة، والبنات ورقة أخيرة</div>
   </div>
   <div id="controls">
     <button onclick="zoomBy(1.2)">تكبير +</button>
     <button onclick="zoomBy(0.8)">تصغير −</button>
     <button class="secondary" onclick="resetView()">توسيط</button>
     <button class="secondary" onclick="exportData()">تصدير البيانات</button>
-    <label class="secondary" style="padding:9px 14px;border-radius:6px;border:1px solid #d8b76866;cursor:pointer;">
+    <label class="secondary" style="padding:6px 12px;font-size:12.5px;border-radius:6px;border:1px solid #d8b76866;cursor:pointer;">
       استيراد
       <input type="file" id="importFile" accept="application/json" style="display:none">
     </label>
