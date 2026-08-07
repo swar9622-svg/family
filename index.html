@@ -419,7 +419,7 @@
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     const swCode = `
-      const CACHE_NAME = 'family-tree-v6';
+      const CACHE_NAME = 'family-tree-v7';
       const urlsToCache = [
         './',
         'icon.png',
@@ -753,7 +753,39 @@ viewport.addEventListener('touchmove', e => {
 }, {passive: false});
 viewport.addEventListener('touchend', () => { dragging = false; touchStartDist = null; });
 
-/* ---------- Exporting High-Quality Images & PDF ---------- */
+/* ---------- محرك معالجة الحفظ الذكي (حل جذري لرسائل الخطأ للأشجار الكبيرة) ---------- */
+
+// احتساب أفضل مقياس رندر آمن أوتوماتيكياً يضمن الدقة العالية وعدم تجاوز حدود المتصفح
+function calculateOptimalScale(element) {
+  const width = element.offsetWidth;
+  const height = element.offsetHeight;
+  
+  // الحد الأقصى الآمن للـ Canvas عبر كل الأجهزة والمتصفحات
+  const MAX_SAFE_DIMENSION = 7500; 
+  
+  let targetScale = 3.0; // الدقة الافتراضية العالية للأشجار العادية
+  const maxDim = Math.max(width, height);
+  
+  if (maxDim * targetScale > MAX_SAFE_DIMENSION) {
+    targetScale = MAX_SAFE_DIMENSION / maxDim;
+  }
+  
+  // لا يقل المقياس عن 1.0 لضمان القراءة بوضوح
+  return Math.max(1.0, targetScale);
+}
+
+async function renderCanvasSafely(canvasElement) {
+  const dynamicScale = calculateOptimalScale(canvasElement);
+  
+  return await html2canvas(canvasElement, {
+    backgroundColor: '#f6efdd',
+    scale: dynamicScale,
+    useCORS: true,
+    logging: false,
+    allowTaint: true
+  });
+}
+
 async function exportImage(evt){
   if(!data){ alert('لا توجد بيانات لحفظها'); return; }
   if(typeof html2canvas === 'undefined'){
@@ -763,7 +795,7 @@ async function exportImage(evt){
 
   const btn = evt ? evt.currentTarget : null;
   const originalText = btn ? btn.textContent : '';
-  if(btn) btn.textContent = 'جاري التجهيز...';
+  if(btn) btn.textContent = 'جاري المعالجة...';
 
   const oldScale = scale, oldPanX = panX, oldPanY = panY;
   scale = 1; panX = 0; panY = 0;
@@ -771,21 +803,22 @@ async function exportImage(evt){
 
   try {
     const canvasElement = document.getElementById('canvas');
-    // رفع المقياس لـ 4 لضمان أعلى دقة ووضوح
-    const capturedCanvas = await html2canvas(canvasElement, {
-      backgroundColor: '#f6efdd',
-      scale: 4,
-      useCORS: true,
-      logging: false
-    });
+    const capturedCanvas = await renderCanvasSafely(canvasElement);
+
+    // استخدام JPEG عالية الجودة عند الشجرات الكبيرة لتفادي انعدام الذاكرة
+    const isLargeTree = (capturedCanvas.width > 4000 || capturedCanvas.height > 4000);
+    const mimeType = isLargeTree ? 'image/jpeg' : 'image/png';
+    const quality = isLargeTree ? 0.95 : 1.0;
 
     capturedCanvas.toBlob(async (blob) => {
       if (!blob) {
-        alert('حدث خطأ أثناء معالجة الصورة');
+        alert('حدث خطأ أثناء معالجة الصورة، يرجى تجربة حفظ PDF.');
         return;
       }
 
-      const file = new File([blob], 'شجرة_العائلة_الورقية.png', { type: 'image/png' });
+      const fileName = isLargeTree ? 'شجرة_العائلة_الورقية.jpg' : 'شجرة_العائلة_الورقية.png';
+      const file = new File([blob], fileName, { type: mimeType });
+
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
           await navigator.share({
@@ -803,10 +836,10 @@ async function exportImage(evt){
       document.getElementById('previewImg').src = imgDataUrl;
       document.getElementById('imgModalOverlay').classList.add('show');
 
-    }, 'image/png', 1.0);
+    }, mimeType, quality);
 
   } catch(err) {
-    alert('حدث خطأ أثناء حفظ الصورة');
+    alert('حدث خطأ أثناء معالجة الشجرة. تأكد من إغلاق باقي التطبيقات لزيادة ذاكرة المتصفح.');
     console.error(err);
   } finally {
     scale = oldScale; panX = oldPanX; panY = oldPanY;
@@ -832,28 +865,27 @@ async function exportPDF(evt){
 
   try {
     const canvasElement = document.getElementById('canvas');
-    const capturedCanvas = await html2canvas(canvasElement, {
-      backgroundColor: '#f6efdd',
-      scale: 3,
-      useCORS: true,
-      logging: false
-    });
+    const capturedCanvas = await renderCanvasSafely(canvasElement);
 
-    const imgData = capturedCanvas.toDataURL('image/png', 1.0);
+    const isLargeTree = (capturedCanvas.width > 4000 || capturedCanvas.height > 4000);
+    const formatType = isLargeTree ? 'JPEG' : 'PNG';
+    const quality = isLargeTree ? 0.92 : 1.0;
+    
+    const imgData = capturedCanvas.toDataURL(isLargeTree ? 'image/jpeg' : 'image/png', quality);
     const { jsPDF } = window.jspdf;
 
     const width = capturedCanvas.width;
     const height = capturedCanvas.height;
     const orientation = width > height ? 'l' : 'p';
 
-    // إنشاء PDF بعرض وارتفاع أبعاد الصورة لتفادي القص والهوامش
     const pdf = new jsPDF({
       orientation: orientation,
       unit: 'px',
-      format: [width, height]
+      format: [width, height],
+      compress: true
     });
 
-    pdf.addImage(imgData, 'PNG', 0, 0, width, height);
+    pdf.addImage(imgData, formatType, 0, 0, width, height, undefined, 'FAST');
     pdf.save('شجرة_العائلة_الورقية.pdf');
 
   } catch(err) {
