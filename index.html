@@ -4,21 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-<!-- اسم التطبيق في الأيفون وعند الإضافة للشاشة الرئيسية -->
 <title>شجرة العائلة</title>
 <meta name="apple-mobile-web-app-title" content="شجرة العائلة">
 <meta name="application-name" content="شجرة العائلة">
-
-<!-- تفعيل وضع التطبيق المستقل في iOS -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-<!-- ربط أيقونة التطبيق icon.png -->
 <link rel="apple-touch-icon" href="icon.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
 <link rel="icon" type="image/png" href="icon.png">
 
-<!-- Web App Manifest للعمل كتطبيق بدون نت -->
 <link rel="manifest" href='data:application/manifest+json,{"name":"شجرة العائلة","short_name":"شجرة العائلة","start_url":".","display":"standalone","background_color":"#f6efdd","theme_color":"#232f38","icons":[{"src":"icon.png","sizes":"192x192","type":"image/png"}]}'>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -30,17 +25,19 @@
 
 <style>
   :root{
-    --ink:#241c14;
-    --paper:#f6efdd;
-    --paper2:#efe4c8;
-    --gold:#b9902f;
+    --ink:#000000;
+    --paper:#f5ebd2;
+    --gold:#a87c22;
     --gold-light:#d8b768;
-    --teal:#1f3d3b;
-    --leaf-main:#2d5a27;
-    --flower-main:#8c3a52;
-    --line:#a9762f;
-    --bar-dark:#232f38;
-    --bar-light:#3d5261;
+    --teal:#132a28;
+    
+    /* ألوان واضحة وغامقة */
+    --leaf-main:#144211;       /* أخضر زيتي غامق */
+    --flower-main:#6e162d;     /* عنابي وردي غامق */
+    --line:#5c390f;            /* خط الأغصان بني داكن ثقيل */
+    
+    --bar-dark:#18222a;
+    --bar-light:#2d3e4a;
   }
 
   *{ box-sizing: border-box; }
@@ -66,10 +63,10 @@
     display: flex; flex-direction: column;
     padding: 8px 14px;
     background: linear-gradient(180deg, var(--bar-dark), var(--bar-light));
-    color: var(--paper);
-    box-shadow: 0 2px 10px rgba(0,0,0,.24);
+    color: #f6efdd;
+    box-shadow: 0 3px 12px rgba(0,0,0,.35);
     gap: 6px;
-    border-bottom: 1px solid #d8b76835;
+    border-bottom: 2px solid var(--gold);
   }
 
   #topbar .titleRow{
@@ -77,16 +74,16 @@
   }
 
   #topbar h1{
-    font-size: 16px; margin: 0; font-weight: 800; letter-spacing: 0.3px;
+    font-size: 16px; margin: 0; font-weight: 900; letter-spacing: 0.3px;
     color: var(--gold-light);
   }
 
   #topbar .sub{
-    font-size: 11px; opacity: 0.85; font-weight: 600;
+    font-size: 11px; opacity: 0.9; font-weight: 700;
   }
 
   #controls{
-    display: flex; gap: 5px; align-items: center;
+    display: flex; gap: 6px; align-items: center;
     overflow-x: auto; -webkit-overflow-scrolling: touch;
     padding-bottom: 2px;
   }
@@ -95,21 +92,22 @@
   button{
     font-family: inherit;
     background: var(--gold);
-    color: #241c14;
+    color: #ffffff;
     border: none;
-    padding: 5px 10px;
+    padding: 6px 12px;
     border-radius: 6px;
     cursor: pointer;
     font-size: 12px;
-    font-weight: 700;
+    font-weight: 800;
     white-space: nowrap;
     transition: transform 0.15s, background 0.15s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
   }
-  button:hover{ background: var(--gold-light); transform: translateY(-1px); }
+  button:hover{ background: var(--gold-light); color: #1a130b; transform: translateY(-1px); }
   button:disabled{ opacity: 0.35; cursor: not-allowed; transform: none !important; }
 
   button.secondary{
-    background: transparent; color: var(--paper); border: 1px solid #d8b76866;
+    background: transparent; color: #f6efdd; border: 1px solid #d8b76888; box-shadow: none;
   }
 
   /* Main Viewport */
@@ -118,14 +116,14 @@
     flex: 1 1 auto;
     min-height: 0;
     overflow: hidden;
-    background: radial-gradient(circle at 20% 10%, #efe2ba22, transparent 40%), var(--paper);
+    background: radial-gradient(circle at 20% 10%, #e6d3a333, transparent 50%), var(--paper);
   }
 
   #viewport{
     position: absolute; inset: 0;
     cursor: grab;
-    background-image: radial-gradient(circle, #b9902f22 1px, transparent 1px);
-    background-size: 26px 26px;
+    background-image: radial-gradient(circle, #5c390f25 1.2px, transparent 1.2px);
+    background-size: 28px 28px;
   }
   #viewport.grabbing{ cursor: grabbing; }
 
@@ -138,7 +136,7 @@
     width: max-content;
   }
 
-  /* Tree Structural Lines */
+  /* Tree Structural Lines (مضاعفة السماكة للضعف 8px) */
   .tree, .tree ul{
     list-style: none; margin: 0; padding: 0;
     display: flex; justify-content: center;
@@ -147,14 +145,15 @@
 
   .tree ul{
     position: relative;
-    padding-top: 34px;
+    padding-top: 36px;
   }
 
   .tree ul::before{
     content: "";
     position: absolute; top: 0; left: 50%;
-    width: 0; height: 34px;
-    border-left: 2.5px solid var(--line);
+    width: 0; height: 36px;
+    border-left: 8px solid var(--line); /* تم زيادة السماكة لـ 8px */
+    transform: translateX(-50%);
   }
 
   .tree > li{
@@ -166,7 +165,7 @@
   .tree ul li{
     position: relative;
     display: flex; flex-direction: column; align-items: center;
-    padding: 34px 16px 0 16px;
+    padding: 36px 16px 0 16px;
     text-align: center;
   }
 
@@ -174,22 +173,28 @@
   .tree ul li::after{
     content: "";
     position: absolute; top: 0; right: 50%;
-    width: 50%; height: 34px;
-    border-top: 2.5px solid var(--line);
+    width: 50%; height: 36px;
+    border-top: 8px solid var(--line); /* تم زيادة السماكة لـ 8px */
   }
   .tree ul li::after{
     right: auto; left: 50%;
-    border-left: 2.5px solid var(--line);
+    border-left: 8px solid var(--line); /* تم زيادة السماكة لـ 8px */
   }
 
   .tree ul li:first-child::before{ border-top-color: transparent; }
   .tree ul li:last-child::after{ border-top-color: transparent; }
 
-  .tree ul li:only-child{ padding-top: 34px; }
+  .tree ul li:only-child{ padding-top: 36px; }
   .tree ul li:only-child::before{ display: none; }
-  .tree ul li:only-child::after{ left: 50%; width: 0; border-top: none; border-left-width: 2.5px; }
+  .tree ul li:only-child::after{ 
+    left: 50%; 
+    width: 0; 
+    border-top: none; 
+    border-left-width: 8px; /* تم زيادة السماكة لـ 8px */
+    transform: translateX(-50%);
+  }
 
-  /* تصميم الأفراد الأساسي - تم استبعاد الظلال لمنع أي أشباح رمادية عند الحفظ */
+  /* تصميم الأفراد الأساسي */
   .node{
     width: 135px;
     height: 135px;
@@ -201,13 +206,13 @@
     cursor: pointer;
     box-sizing: border-box;
   }
-  .node:hover{ transform: scale(1.03); }
+  .node:hover{ transform: scale(1.04); }
 
   /* 🍃 تصميم الولد (ورقة الشجر) */
   .node.male{
     color: var(--leaf-main);
-    background: linear-gradient(145deg, #f2f8f0, #d3e8cf);
-    border: 3.5px solid var(--leaf-main);
+    background: linear-gradient(145deg, #e4f2e0, #b2dbab);
+    border: 4px solid var(--leaf-main);
     border-radius: 4px 52px 4px 52px;
   }
 
@@ -222,35 +227,35 @@
     z-index: 1;
   }
 
+  /* محتوى البطاقة */
   .node-content{
     position: relative; z-index: 2;
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
     width: 100%; height: 100%;
-    padding: 12px 4px 6px 4px;
+    padding: 2px 6px 14px 6px;
+    transform: translateY(-4px);
   }
 
+  /* الأيقونة */
   .node .icon-top{
-    font-size: 22px;
+    font-size: 40px;
     line-height: 1;
-    margin-top: 6px;
     margin-bottom: 2px;
-    opacity: 1;
+    display: block;
   }
 
+  /* الاسم */
   .node .name{
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 900;
-    line-height: 1.2;
+    line-height: 1.1;
     text-align: center;
     width: 100%;
     word-break: break-word;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex: 1;
-    padding: 0 2px 4px 2px;
-    color: var(--ink);
+    color: #000000;
+    letter-spacing: normal !important;
+    font-feature-settings: "liga" 1, "calt" 1;
   }
 
   /* Empty state */
@@ -258,67 +263,67 @@
     position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
     flex-direction: column; gap: 14px; text-align: center; padding: 20px; z-index: 10;
   }
-  #empty h2{ font-size: 26px; color: var(--teal); margin: 0; font-weight: 800; }
-  #empty p{ max-width: 420px; opacity: 0.8; line-height: 1.8; margin: 0; font-size: 14px; }
+  #empty h2{ font-size: 26px; color: var(--teal); margin: 0; font-weight: 900; }
+  #empty p{ max-width: 420px; opacity: 0.9; line-height: 1.8; margin: 0; font-size: 14px; font-weight: 700; }
 
   /* Modals Base */
   .modalOverlay{
-    position: fixed; inset: 0; background: #14282699;
+    position: fixed; inset: 0; background: #0c1817bb;
     display: none; align-items: center; justify-content: center; z-index: 100;
   }
   .modalOverlay.show{ display: flex; }
 
   .modalBox{
-    background: var(--paper); border: 2px solid var(--gold);
+    background: var(--paper); border: 2.5px solid var(--gold);
     border-radius: 12px; padding: 24px 26px; width: 330px; max-width: 90%;
-    box-shadow: 0 10px 40px rgba(0,0,0,.4);
+    box-shadow: 0 12px 45px rgba(0,0,0,.5);
   }
-  .modalBox h3{ margin: 0 0 16px; color: var(--teal); font-size: 20px; font-weight: 800; }
-  .modalBox label{ display: block; font-size: 14px; margin: 12px 0 5px; opacity: 0.85; font-weight: 600; }
+  .modalBox h3{ margin: 0 0 16px; color: var(--teal); font-size: 20px; font-weight: 900; }
+  .modalBox label{ display: block; font-size: 14px; margin: 12px 0 5px; opacity: 0.95; font-weight: 800; }
   .modalBox input[type=text]{
-    width: 100%; padding: 9px 12px; border-radius: 6px; border: 1px solid #b9902f66;
-    font-family: inherit; font-size: 15px; background: #fffdf6;
+    width: 100%; padding: 10px 12px; border-radius: 6px; border: 2px solid #a87c22aa;
+    font-family: inherit; font-size: 15px; background: #fffdf6; font-weight: 700;
     outline: none;
   }
 
   .genderRow{ display: flex; gap: 10px; margin-top: 6px; }
   .genderRow label{
     flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
-    border: 1px solid #b9902f55; border-radius: 6px; padding: 8px; margin: 0; cursor: pointer;
-    font-size: 14px; font-weight: 600;
+    border: 1.5px solid #a87c2288; border-radius: 6px; padding: 8px; margin: 0; cursor: pointer;
+    font-size: 14px; font-weight: 800;
   }
   .genderRow input{ accent-color: var(--gold); }
 
   .btnRow{ display: flex; gap: 8px; margin-top: 20px; justify-content: flex-end; }
-  .btnRow button.cancel{ background: transparent; border: 1px solid #b9902f66; color: var(--ink); }
+  .btnRow button.cancel{ background: transparent; border: 1.5px solid #a87c22aa; color: var(--ink); }
 
   /* Action Popup Menu */
   .actionMenuBox{ text-align: center; }
   .actionMenuBox .personTitle{
-    font-size: 22px; font-weight: 800; color: var(--teal); margin-bottom: 16px;
-    border-bottom: 1px dashed var(--gold); padding-bottom: 10px;
+    font-size: 22px; font-weight: 900; color: var(--teal); margin-bottom: 16px;
+    border-bottom: 2px dashed var(--gold); padding-bottom: 10px;
   }
   .actionButtonsList{ display: flex; flex-direction: column; gap: 10px; }
   .actionButtonsList button{ width: 100%; padding: 10px; font-size: 14px; border-radius: 8px; }
-  .actionButtonsList button.delBtn{ background: #8a3b3b; color: #f6efdd; }
+  .actionButtonsList button.delBtn{ background: #8a2323; color: #ffffff; }
 
   .moveRow{ display: flex; gap: 8px; }
-  .moveRow button{ flex: 1; color: var(--ink); border: 1px solid var(--gold); }
+  .moveRow button{ flex: 1; color: var(--ink); border: 1.5px solid var(--gold); }
 
   /* Image Preview Modal */
   #imgModalBox{
-    background: var(--paper); border: 2px solid var(--gold);
+    background: var(--paper); border: 2.5px solid var(--gold);
     border-radius: 12px; padding: 16px; width: 90%; max-width: 450px;
     max-height: 85vh; display: flex; flex-direction: column; align-items: center;
-    box-shadow: 0 10px 40px rgba(0,0,0,.4); gap: 12px; overflow-y: auto; text-align: center;
+    box-shadow: 0 12px 45px rgba(0,0,0,.5); gap: 12px; overflow-y: auto; text-align: center;
   }
-  #imgModalBox img{ width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--gold); }
+  #imgModalBox img{ width: 100%; height: auto; border-radius: 8px; border: 2px solid var(--gold); }
 
   #hint{
     position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
-    font-size: 12px; opacity: 0.8; z-index: 40; background: var(--paper); padding: 4px 14px;
-    border-radius: 20px; white-space: nowrap; border: 1px solid #b9902f44;
-    font-weight: 700;
+    font-size: 12px; color: var(--ink); z-index: 40; background: var(--paper); padding: 5px 16px;
+    border-radius: 20px; white-space: nowrap; border: 1.5px solid #a87c2288;
+    font-weight: 800; box-shadow: 0 2px 8px rgba(0,0,0,0.15);
   }
 </style>
 </head>
@@ -336,7 +341,7 @@
     <button class="secondary" onclick="exportImage(event)">حفظ صورة HQ 📷</button>
     <button class="secondary" onclick="exportPDF(event)">حفظ PDF 📄</button>
     <button class="secondary" onclick="exportData()">تصدير</button>
-    <label class="secondary" style="padding:5px 8px;font-size:11px;border-radius:6px;border:1px solid #d8b76866;cursor:pointer;white-space:nowrap;">
+    <label class="secondary" style="padding:6px 10px;font-size:12px;border-radius:6px;border:1px solid #d8b76888;cursor:pointer;white-space:nowrap;font-weight:800;">
       استيراد
       <input type="file" id="importFile" accept="application/json" style="display:none">
     </label>
@@ -351,7 +356,7 @@
   <div id="empty">
     <h2>شجرتك الورقية تبدأ هنا</h2>
     <p>لا يوجد أي فرد بعد. أضف الجد الأول لتبدأ بناء الشجرة، ثم اضغط على اسمه لإضافة الأبناء🍃 والبنات🌸.</p>
-    <button onclick="openAddModal(null)" style="padding:8px 18px; font-size:14px;">إضافة الجد الأول</button>
+    <button onclick="openAddModal(null)" style="padding:10px 22px; font-size:15px;">إضافة الجد الأول</button>
   </div>
 
   <div id="hint">اضغط على أي فرد للتعديل • 🍃 للولد • 🌸 للبنت</div>
@@ -385,7 +390,7 @@
     <div class="personTitle" id="actionPersonName">الاسم</div>
     <div class="actionButtonsList">
       <button id="addChildBtn" onclick="handleAddChildFromMenu()">➕ إضافة ابن / ابنة</button>
-      <button class="secondary" style="color:var(--ink); border:1px solid var(--gold)" onclick="handleEditNameFromMenu()">✏️ تعديل الاسم</button>
+      <button class="secondary" style="color:var(--ink); border:1.5px solid var(--gold)" onclick="handleEditNameFromMenu()">✏️ تعديل الاسم</button>
       
       <div class="moveRow" id="moveRow">
         <button class="secondary" id="moveLeftBtn" onclick="handleMoveSibling(-1)">⬅️ تحريك لليسار</button>
@@ -415,7 +420,7 @@
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     const swCode = `
-      const CACHE_NAME = 'family-tree-v8';
+      const CACHE_NAME = 'family-tree-v14';
       const urlsToCache = [
         './',
         'icon.png',
@@ -663,12 +668,12 @@ function renderNode(person){
           <defs>
             <radialGradient id="grad_${person.id}" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stop-color="#ffffff" />
-              <stop offset="70%" stop-color="#fde8ed" />
-              <stop offset="100%" stop-color="#f7cdd7" />
+              <stop offset="65%" stop-color="#fad4dd" />
+              <stop offset="100%" stop-color="#f2b3c2" />
             </radialGradient>
           </defs>
-          <path d="${flowerOuterPath}" fill="url(#grad_${person.id})" stroke="#8c3a52" stroke-width="2.5" stroke-linejoin="round" />
-          <path d="${flowerInnerPath}" fill="none" stroke="#8c3a52" stroke-width="1.2" stroke-linejoin="round" />
+          <path d="${flowerOuterPath}" fill="url(#grad_${person.id})" stroke="#6e162d" stroke-width="3.5" stroke-linejoin="round" />
+          <path d="${flowerInnerPath}" fill="none" stroke="#6e162d" stroke-width="1.8" stroke-linejoin="round" />
         </svg>
         <div class="node-content">
           <div class="icon-top">${badgeIcon}</div>
@@ -749,8 +754,7 @@ viewport.addEventListener('touchmove', e => {
 }, {passive: false});
 viewport.addEventListener('touchend', () => { dragging = false; touchStartDist = null; });
 
-/* ---------- محرك معالجة الحفظ النقية والنظيفة من الأشباح والظلال ---------- */
-
+/* ---------- محرك الحفظ والتصدير ---------- */
 function calculateOptimalScale(element) {
   const width = element.offsetWidth;
   const height = element.offsetHeight;
@@ -765,21 +769,31 @@ function calculateOptimalScale(element) {
 }
 
 async function renderCanvasSafely(canvasElement) {
+  if (document.fonts && document.fonts.ready) {
+    await document.fonts.ready;
+  }
+
   const dynamicScale = calculateOptimalScale(canvasElement);
   
   return await html2canvas(canvasElement, {
-    backgroundColor: '#f6efdd',
+    backgroundColor: '#f5ebd2',
     scale: dynamicScale,
     useCORS: true,
     logging: false,
     allowTaint: true,
-    // تنظيف النسخة الملتقطة من أي ظلال تعوق معالجة html2canvas
+    letterRendering: false,
     onclone: (clonedDoc) => {
       const allNodes = clonedDoc.querySelectorAll('.node, .flower-svg-bg, .node.male');
       allNodes.forEach(node => {
         node.style.boxShadow = 'none';
         node.style.filter = 'none';
         node.style.webkitFilter = 'none';
+      });
+
+      const nameElements = clonedDoc.querySelectorAll('.name');
+      nameElements.forEach(el => {
+        el.style.letterSpacing = 'normal';
+        el.style.fontFeatureSettings = '"liga" 1, "calt" 1';
       });
     }
   });
