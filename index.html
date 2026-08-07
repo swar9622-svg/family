@@ -18,8 +18,8 @@
     --male:#1f3d3b;
     --female:#8a3b3b;
     --line:#a9762f;
-    --bar-dark:#2b2118;
-    --bar-light:#4a3826;
+    --bar-dark:#232f38;
+    --bar-light:#3d5261;
   }
   *{box-sizing:border-box;}
   html,body{
@@ -41,13 +41,16 @@
   #topbar{
     flex:0 0 auto;
     position:relative; z-index:50;
-    display:flex; align-items:center; justify-content:space-between;
-    padding:8px 16px;
+    display:flex; flex-direction:column;
+    padding:6px 12px 7px;
     background:linear-gradient(180deg, var(--bar-dark), var(--bar-light));
     color:var(--paper);
-    box-shadow:0 2px 10px rgba(0,0,0,.28);
-    flex-wrap:wrap; gap:8px;
-    border-bottom:1px solid #d8b76840;
+    box-shadow:0 2px 10px rgba(0,0,0,.24);
+    gap:4px;
+    border-bottom:1px solid #d8b76835;
+  }
+  #topbar .titleRow{
+    display:flex; align-items:baseline; justify-content:space-between; gap:8px;
   }
 
   /* main content area holds viewport + empty state, bounded by flex not 100vh */
@@ -61,22 +64,30 @@
       var(--paper);
   }
   #topbar h1{
-    font-size:16px; margin:0; font-weight:700; letter-spacing:.5px;
+    font-size:14px; margin:0; font-weight:700; letter-spacing:.3px;
     color:var(--gold-light);
     font-family:'Amiri Quran', 'Amiri', serif;
   }
-  #topbar .sub{ font-size:10px; opacity:.6; margin-top:1px; }
-  #controls{ display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+  #topbar .sub{ font-size:9.5px; opacity:.55; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  #controls{
+    display:flex; gap:4px; align-items:center;
+    flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch;
+    padding-bottom:1px;
+    min-width:0;
+  }
+  #controls::-webkit-scrollbar{ display:none; }
   button{
     font-family:'Amiri', serif;
     background:var(--gold);
     color:#241c14;
     border:none;
-    padding:6px 12px;
+    padding:5px 8px;
     border-radius:6px;
     cursor:pointer;
-    font-size:12.5px;
+    font-size:11px;
     font-weight:700;
+    white-space:nowrap;
+    flex:0 1 auto;
     transition:transform .15s, background .15s;
   }
   button:hover{ background:var(--gold-light); transform:translateY(-1px); }
@@ -172,12 +183,12 @@
     padding:10px;
     background:radial-gradient(circle at 35% 30%, #f3e2d8, #e3c3bd 75%);
   }
-  .card.female .name{ font-size:16px; line-height:1.15; word-break:break-word; }
+  .card.female .name{ font-size:19px; line-height:1.15; word-break:break-word; }
   .card.female .actions{ margin-top:2px; }
   .card.female .actions button{ padding:3px 8px; font-size:11px; }
 
   .card .name{
-    font-size:19px; font-weight:700; color:var(--ink); white-space:nowrap;
+    font-size:23px; font-weight:700; color:var(--ink); white-space:nowrap;
   }
   .card .tag{
     font-size:11.5px; opacity:.65;
@@ -236,7 +247,7 @@
 <body>
 
 <div id="topbar">
-  <div>
+  <div class="titleRow">
     <h1>شجرة العائلة</h1>
     <div class="sub">الأبناء يواصلون الشجرة، والبنات ورقة أخيرة</div>
   </div>
@@ -244,8 +255,8 @@
     <button onclick="zoomBy(1.2)">تكبير +</button>
     <button onclick="zoomBy(0.8)">تصغير −</button>
     <button class="secondary" onclick="resetView()">توسيط</button>
-    <button class="secondary" onclick="exportData()">تصدير البيانات</button>
-    <label class="secondary" style="padding:6px 12px;font-size:12.5px;border-radius:6px;border:1px solid #d8b76866;cursor:pointer;">
+    <button class="secondary" onclick="exportData()">تصدير</button>
+    <label class="secondary" style="padding:5px 8px;font-size:11px;border-radius:6px;border:1px solid #d8b76866;cursor:pointer;white-space:nowrap;flex:0 1 auto;">
       استيراد
       <input type="file" id="importFile" accept="application/json" style="display:none">
     </label>
