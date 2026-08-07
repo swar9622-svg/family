@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>شجرة العائلة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Amiri+Quran&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#241c14;
+    --paper:#f6efdd;
+    --paper2:#efe4c8;
+    --gold:#b9902f;
+    --gold-light:#d8b768;
+    --teal:#1f3d3b;
+    --teal-deep:#142826;
+    --male:#1f3d3b;
+    --female:#8a3b3b;
+    --line:#b9902f;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;
+    color:var(--ink);
+    font-family:'Amiri', serif;
+    height:100%;
+    width:100%;
+  }
+  body{
+    display:flex;
+    flex-direction:column;
+    height:100vh;
+    height:100dvh;
+    overflow:hidden;
+  }
+
+  /* top bar */
+  #topbar{
+    flex:0 0 auto;
+    position:relative; z-index:50;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 22px;
+    background:linear-gradient(180deg, var(--teal-deep), var(--teal));
+    color:var(--paper);
+    box-shadow:0 4px 18px rgba(0,0,0,.35);
+    flex-wrap:wrap; gap:10px;
+  }
+
+  /* main content area holds viewport + empty state, bounded by flex not 100vh */
+  #main{
+    position:relative;
+    flex:1 1 auto;
+    min-height:0;
+    overflow:hidden;
+    background:
+      radial-gradient(circle at 20% 10%, #efe2ba22, transparent 40%),
+      var(--paper);
+  }
+  #topbar h1{
+    font-size:22px; margin:0; font-weight:700; letter-spacing:1px;
+    color:var(--gold-light);
+  }
+  #topbar .sub{ font-size:12.5px; opacity:.75; margin-top:2px; }
+  #controls{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  button{
+    font-family:'Amiri', serif;
+    background:var(--gold);
+    color:#241c14;
+    border:none;
+    padding:9px 16px;
+    border-radius:6px;
+    cursor:pointer;
+    font-size:14.5px;
+    font-weight:700;
+    transition:transform .15s, background .15s;
+  }
+  button:hover{ background:var(--gold-light); transform:translateY(-1px); }
+  button.secondary{
+    background:transparent; color:var(--paper); border:1px solid #d8b76866;
+  }
+  button.secondary:hover{ background:#ffffff12; }
+
+  /* canvas / viewport */
+  #viewport{
+    position:absolute; inset:0;
+    cursor:grab;
+    background-image:
+      radial-gradient(circle, #b9902f22 1px, transparent 1px);
+    background-size:26px 26px;
+  }
+  #viewport.grabbing{ cursor:grabbing; }
+  #canvas{
+    position:absolute;
+    top:60vh; left:50%;
+    transform-origin:0 0;
+    transform: translate(-50%,-50%) scale(1);
+    padding:120px 200px;
+    width:max-content;
+  }
+
+  /* org-chart tree */
+  .tree, .tree ul{
+    list-style:none; margin:0; padding:0;
+    display:flex; justify-content:center;
+  }
+  .tree li{
+    position:relative;
+    display:flex; flex-direction:column; align-items:center;
+    padding:34px 16px 0 16px;
+    text-align:center;
+  }
+  .tree > li{ padding-top:0; } /* root: nothing above it */
+
+  /* the two halves of the horizontal "bus" line above each card,
+     plus a vertical stub down into the card */
+  .tree li::before,
+  .tree li::after{
+    content:"";
+    position:absolute; top:0; right:50%;
+    width:50%; height:34px;
+    border-top:2px solid var(--line);
+  }
+  .tree li::after{
+    right:auto; left:50%;
+    border-right:none;
+    border-left:2px solid var(--line); /* vertical stub down to the card */
+    border-radius:0 0 0 10px;
+  }
+  .tree li::before{
+    border-radius:0 10px 0 0;
+  }
+
+  /* trim the bus line so it doesn't overshoot the outer siblings */
+  .tree li:first-child::before{ border-color:transparent; }
+  .tree li:last-child::after{ border-left:none; }
+  .tree li:last-child::before{
+    border-right:2px solid var(--line);
+    border-radius:0 10px 0 0;
+  }
+  /* a lone child needs no bus line at all, just drops straight down */
+  .tree li:only-child{ padding-top:0; }
+  .tree li:only-child::before,
+  .tree li:only-child::after{ display:none; }
+
+  .card{
+    display:inline-flex; flex-direction:column; align-items:center;
+    justify-content:center;
+    gap:4px;
+    background:linear-gradient(160deg, var(--paper2), #e6d8a9);
+    border:1.5px solid var(--gold);
+    border-radius:10px;
+    padding:12px 18px;
+    box-shadow:0 3px 10px rgba(0,0,0,.18);
+    min-width:120px;
+    position:relative;
+    z-index:2;
+  }
+  .card.male{ border-color:var(--male); }
+
+  /* daughters render as a circle — a visual leaf, no branch continues from her */
+  .card.female{
+    border-color:var(--female);
+    border-radius:50%;
+    width:118px; height:118px;
+    min-width:0;
+    padding:10px;
+    background:radial-gradient(circle at 35% 30%, #f3e2d8, #e3c3bd 75%);
+  }
+  .card.female .name{ font-size:16px; line-height:1.15; word-break:break-word; }
+  .card.female .actions{ margin-top:2px; }
+  .card.female .actions button{ padding:3px 8px; font-size:11px; }
+
+  .card .name{
+    font-size:19px; font-weight:700; color:var(--ink); white-space:nowrap;
+  }
+  .card .tag{
+    font-size:11.5px; opacity:.65;
+  }
+  .card .actions{
+    display:flex; gap:6px; margin-top:6px;
+  }
+  .card .actions button{
+    padding:4px 9px; font-size:12px; border-radius:5px;
+  }
+  .card .actions button.del{ background:#8a3b3b; color:#f6efdd; }
+
+  /* empty state */
+  #empty{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    flex-direction:column; gap:14px; text-align:center; padding:20px;
+    z-index:10;
+  }
+  #empty h2{ font-size:26px; color:var(--teal); margin:0; }
+  #empty p{ max-width:420px; opacity:.75; line-height:1.9; margin:0; }
+
+  /* modal */
+  #modalOverlay{
+    position:fixed; inset:0; background:#14282699;
+    display:none; align-items:center; justify-content:center; z-index:100;
+  }
+  #modalOverlay.show{ display:flex; }
+  #modal{
+    background:var(--paper); border:2px solid var(--gold);
+    border-radius:12px; padding:26px 28px; width:320px;
+    box-shadow:0 10px 40px rgba(0,0,0,.4);
+  }
+  #modal h3{ margin:0 0 16px; color:var(--teal); font-size:19px; }
+  #modal label{ display:block; font-size:14px; margin:12px 0 5px; opacity:.8; }
+  #modal input[type=text]{
+    width:100%; padding:9px 10px; border-radius:6px; border:1px solid #b9902f66;
+    font-family:'Amiri', serif; font-size:15px; background:#fffdf6;
+  }
+  #modal .genderRow{ display:flex; gap:10px; margin-top:6px; }
+  #modal .genderRow label{
+    flex:1; display:flex; align-items:center; justify-content:center; gap:6px;
+    border:1px solid #b9902f55; border-radius:6px; padding:8px; margin:0; cursor:pointer;
+    font-size:14px;
+  }
+  #modal .genderRow input{ accent-color:var(--gold); }
+  #modal .btnRow{ display:flex; gap:8px; margin-top:20px; justify-content:flex-end; }
+  #modal .btnRow button.cancel{ background:transparent; border:1px solid #b9902f66; color:var(--ink); }
+
+  #hint{
+    position:absolute; bottom:14px; left:50%; transform:translateX(-50%);
+    font-size:12.5px; opacity:.55; z-index:40; background:var(--paper); padding:4px 12px; border-radius:20px;
+    white-space:nowrap;
+  }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <div>
+    <h1>شجرة العائلة</h1>
+    <div class="sub">تُبنى الشجرة عبر الأبناء الذكور فقط — البنات يظهرن كأوراق نهائية دون تفرّع</div>
+  </div>
+  <div id="controls">
+    <button onclick="zoomBy(1.2)">تكبير +</button>
+    <button onclick="zoomBy(0.8)">تصغير −</button>
+    <button class="secondary" onclick="resetView()">توسيط</button>
+    <button class="secondary" onclick="exportData()">تصدير البيانات</button>
+    <label class="secondary" style="padding:9px 14px;border-radius:6px;border:1px solid #d8b76866;cursor:pointer;">
+      استيراد
+      <input type="file" id="importFile" accept="application/json" style="display:none">
+    </label>
+  </div>
+</div>
+
+<div id="main">
+  <div id="viewport">
+    <div id="canvas"></div>
+  </div>
+
+  <div id="empty">
+    <h2>ابدأ شجرتك</h2>
+    <p>لا يوجد أي فرد بعد. أضف الجد الأول لتبدأ بناء الشجرة، ثم أضف الأبناء والبنات تباعًا من كل بطاقة.</p>
+    <button onclick="openModal(null)">إضافة الجد الأول</button>
+  </div>
+
+  <div id="hint">اسحب للتحريك • عجلة الفأرة للتكبير/التصغير</div>
+</div>
+
+<div id="modalOverlay">
+  <div id="modal">
+    <h3 id="modalTitle">إضافة فرد</h3>
+    <label>الاسم</label>
+    <input type="text" id="nameInput" placeholder="اكتب الاسم هنا">
+    <label>الجنس</label>
+    <div class="genderRow">
+      <label><input type="radio" name="gender" value="m" checked> ذكر</label>
+      <label><input type="radio" name="gender" value="f"> أنثى</label>
+    </div>
+    <div class="btnRow">
+      <button class="cancel" onclick="closeModal()">إلغاء</button>
+      <button onclick="confirmAdd()">إضافة</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- data ---------- */
+// each person: {id, name, gender:'m'|'f', children:[...] }  (children only meaningful for gender 'm', or root)
+let data = JSON.parse(localStorage.getItem('familyTreeData') || 'null');
+let pendingParentId = null;
+
+function save(){ localStorage.setItem('familyTreeData', JSON.stringify(data)); }
+
+function uid(){ return 'p_' + Math.random().toString(36).slice(2,10); }
+
+/* ---------- modal ---------- */
+function openModal(parentId){
+  pendingParentId = parentId;
+  document.getElementById('modalTitle').textContent = parentId ? 'إضافة ابن/ابنة' : 'إضافة الجد الأول';
+  document.getElementById('nameInput').value = '';
+  document.querySelector('input[name=gender][value=m]').checked = true;
+  document.getElementById('modalOverlay').classList.add('show');
+  setTimeout(()=>document.getElementById('nameInput').focus(), 50);
+}
+function closeModal(){ document.getElementById('modalOverlay').classList.remove('show'); }
+
+function confirmAdd(){
+  const name = document.getElementById('nameInput').value.trim();
+  if(!name){ document.getElementById('nameInput').focus(); return; }
+  const gender = document.querySelector('input[name=gender]:checked').value;
+  const person = {id:uid(), name, gender, children:[]};
+
+  if(!pendingParentId){
+    data = person; // root
+  } else {
+    const parent = findPerson(data, pendingParentId);
+    if(parent){ parent.children.push(person); }
+  }
+  save();
+  closeModal();
+  render();
+}
+
+function deletePerson(id){
+  if(data && data.id === id){
+    if(!confirm('سيتم حذف الجد الأول وكل الشجرة تحته. متابعة؟')) return;
+    data = null; save(); render(); return;
+  }
+  if(!confirm('حذف هذا الفرد وكل أبنائه؟')) return;
+  removeFrom(data, id);
+  save(); render();
+}
+function removeFrom(node, id){
+  if(!node || !node.children) return;
+  node.children = node.children.filter(c=>c.id!==id);
+  node.children.forEach(c=>removeFrom(c,id));
+}
+function findPerson(node, id){
+  if(!node) return null;
+  if(node.id===id) return node;
+  for(const c of (node.children||[])){
+    const f = findPerson(c,id);
+    if(f) return f;
+  }
+  return null;
+}
+
+/* ---------- render ---------- */
+function render(){
+  const canvas = document.getElementById('canvas');
+  const empty = document.getElementById('empty');
+  if(!data){
+    canvas.innerHTML='';
+    empty.style.display='flex';
+    return;
+  }
+  empty.style.display='none';
+  canvas.innerHTML = `<ul class="tree"><li>${renderNode(data)}</li></ul>`;
+}
+
+function renderNode(person){
+  const canHaveChildren = person.gender === 'm' || person === data; // root or male
+  const genderLabel = person.gender === 'm' ? 'ذكر' : 'أنثى';
+  const addBtn = canHaveChildren ? `<button onclick="openModal('${person.id}')">+ إضافة ابن/ابنة</button>` : '';
+  const childrenHtml = (canHaveChildren && person.children && person.children.length)
+    ? `<ul>${person.children.map(c=>`<li>${renderNode(c)}</li>`).join('')}</ul>`
+    : '';
+  return `
+    <div class="card ${person.gender==='m'?'male':'female'}">
+      <div class="name">${escapeHtml(person.name)}</div>
+      <div class="tag">${genderLabel}</div>
+      <div class="actions">
+        ${addBtn}
+        <button class="del" onclick="deletePerson('${person.id}')">حذف</button>
+      </div>
+    </div>
+    ${childrenHtml}
+  `;
+}
+
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+/* ---------- zoom & pan ---------- */
+let scale = 1, panX = 0, panY = 0;
+const viewport = document.getElementById('viewport');
+const canvasEl = document.getElementById('canvas');
+
+function applyTransform(){
+  canvasEl.style.transform = `translate(calc(-50% + ${panX}px), calc(-50% + ${panY}px)) scale(${scale})`;
+}
+function zoomBy(f){
+  scale = Math.min(3, Math.max(0.15, scale*f));
+  applyTransform();
+}
+function resetView(){
+  scale=1; panX=0; panY=0; applyTransform();
+}
+
+viewport.addEventListener('wheel', e=>{
+  e.preventDefault();
+  const factor = e.deltaY < 0 ? 1.1 : 0.9;
+  scale = Math.min(3, Math.max(0.15, scale*factor));
+  applyTransform();
+}, {passive:false});
+
+let dragging=false, startX=0, startY=0, startPanX=0, startPanY=0;
+viewport.addEventListener('mousedown', e=>{
+  dragging=true; viewport.classList.add('grabbing');
+  startX=e.clientX; startY=e.clientY; startPanX=panX; startPanY=panY;
+});
+window.addEventListener('mousemove', e=>{
+  if(!dragging) return;
+  panX = startPanX + (e.clientX-startX);
+  panY = startPanY + (e.clientY-startY);
+  applyTransform();
+});
+window.addEventListener('mouseup', ()=>{ dragging=false; viewport.classList.remove('grabbing'); });
+
+// touch support
+let touchStartDist=null, touchStartScale=1;
+viewport.addEventListener('touchstart', e=>{
+  if(e.touches.length===1){
+    dragging=true;
+    startX=e.touches[0].clientX; startY=e.touches[0].clientY;
+    startPanX=panX; startPanY=panY;
+  } else if(e.touches.length===2){
+    dragging=false;
+    touchStartDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+    touchStartScale=scale;
+  }
+});
+viewport.addEventListener('touchmove', e=>{
+  if(e.touches.length===1 && dragging){
+    panX = startPanX + (e.touches[0].clientX-startX);
+    panY = startPanY + (e.touches[0].clientY-startY);
+    applyTransform();
+  } else if(e.touches.length===2 && touchStartDist){
+    const dist = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+    scale = Math.min(3, Math.max(0.15, touchStartScale * (dist/touchStartDist)));
+    applyTransform();
+  }
+  e.preventDefault();
+}, {passive:false});
+viewport.addEventListener('touchend', ()=>{ dragging=false; touchStartDist=null; });
+
+/* ---------- import / export ---------- */
+function exportData(){
+  if(!data){ alert('لا توجد بيانات بعد'); return; }
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'family-tree-data.json'; a.click();
+  URL.revokeObjectURL(url);
+}
+document.getElementById('importFile').addEventListener('change', e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev=>{
+    try{
+      data = JSON.parse(ev.target.result);
+      save(); render(); resetView();
+    }catch(err){ alert('ملف غير صالح'); }
+  };
+  reader.readAsText(file);
+});
+
+/* ---------- init ---------- */
+applyTransform();
+render();
+</script>
+</body>
+</html>
