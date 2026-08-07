@@ -99,54 +99,55 @@
     width:max-content;
   }
 
-  /* org-chart tree */
+  /* org-chart tree — geometry forced to LTR so left/right math stays
+     predictable regardless of the page's RTL direction; text inside
+     each card is reset back to RTL below. */
   .tree, .tree ul{
     list-style:none; margin:0; padding:0;
     display:flex; justify-content:center;
+    direction:ltr;
   }
-  .tree li{
+  .tree > li{
+    position:relative;
+    display:flex; flex-direction:column; align-items:center;
+    padding:0 16px;
+  }
+  .tree ul li{
     position:relative;
     display:flex; flex-direction:column; align-items:center;
     padding:34px 16px 0 16px;
     text-align:center;
   }
-  .tree > li{ padding-top:0; } /* root: nothing above it */
 
   /* the two halves of the horizontal "bus" line above each card,
      plus a vertical stub down into the card */
-  .tree li::before,
-  .tree li::after{
+  .tree ul li::before,
+  .tree ul li::after{
     content:"";
     position:absolute; top:0; right:50%;
     width:50%; height:34px;
     border-top:2px solid var(--line);
   }
-  .tree li::after{
+  .tree ul li::after{
     right:auto; left:50%;
-    border-right:none;
-    border-left:2px solid var(--line); /* vertical stub down to the card */
-    border-radius:0 0 0 10px;
-  }
-  .tree li::before{
-    border-radius:0 10px 0 0;
+    border-left:2px solid var(--line); /* vertical stub down to this card */
   }
 
-  /* trim the bus line so it doesn't overshoot the outer siblings */
-  .tree li:first-child::before{ border-color:transparent; }
-  .tree li:last-child::after{ border-left:none; }
-  .tree li:last-child::before{
-    border-right:2px solid var(--line);
-    border-radius:0 10px 0 0;
-  }
-  /* a lone child needs no bus line at all, just drops straight down */
-  .tree li:only-child{ padding-top:0; }
-  .tree li:only-child::before,
-  .tree li:only-child::after{ display:none; }
+  /* trim the bus line so it doesn't overshoot the outermost siblings */
+  .tree ul li:first-child::before{ border-top-color:transparent; }
+  .tree ul li:last-child::after{ border-top-color:transparent; }
+
+  /* a single child still gets a gap and a plain vertical drop —
+     never sits flush against its parent */
+  .tree ul li:only-child{ padding-top:34px; }
+  .tree ul li:only-child::before{ display:none; }
+  .tree ul li:only-child::after{ left:50%; width:0; border-top:none; }
 
   .card{
     display:inline-flex; flex-direction:column; align-items:center;
     justify-content:center;
     gap:4px;
+    direction:rtl;
     background:linear-gradient(160deg, var(--paper2), #e6d8a9);
     border:1.5px solid var(--gold);
     border-radius:10px;
