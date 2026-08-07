@@ -189,7 +189,7 @@
   .tree ul li:only-child::before{ display: none; }
   .tree ul li:only-child::after{ left: 50%; width: 0; border-top: none; border-left-width: 2.5px; }
 
-  /* تصميم الأفراد الأساسي */
+  /* تصميم الأفراد الأساسي - تم استبعاد الظلال لمنع أي أشباح رمادية عند الحفظ */
   .node{
     width: 135px;
     height: 135px;
@@ -199,10 +199,9 @@
     align-items: center; justify-content: center;
     direction: rtl;
     cursor: pointer;
-    transition: transform 0.15s, filter 0.15s;
     box-sizing: border-box;
   }
-  .node:hover{ transform: translateY(-3px) scale(1.03); }
+  .node:hover{ transform: scale(1.03); }
 
   /* 🍃 تصميم الولد (ورقة الشجر) */
   .node.male{
@@ -210,7 +209,6 @@
     background: linear-gradient(145deg, #f2f8f0, #d3e8cf);
     border: 3.5px solid var(--leaf-main);
     border-radius: 4px 52px 4px 52px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.12);
   }
 
   /* 🌸 تصميم البنت (الوردة) */
@@ -222,7 +220,6 @@
   .flower-svg-bg{
     position: absolute; inset: 0; width: 100%; height: 100%;
     z-index: 1;
-    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.12));
   }
 
   .node-content{
@@ -239,7 +236,6 @@
     margin-top: 6px;
     margin-bottom: 2px;
     opacity: 1;
-    filter: drop-shadow(0 1px 1px rgba(0,0,0,0.15));
   }
 
   .node .name{
@@ -419,7 +415,7 @@
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     const swCode = `
-      const CACHE_NAME = 'family-tree-v7';
+      const CACHE_NAME = 'family-tree-v8';
       const urlsToCache = [
         './',
         'icon.png',
@@ -753,24 +749,18 @@ viewport.addEventListener('touchmove', e => {
 }, {passive: false});
 viewport.addEventListener('touchend', () => { dragging = false; touchStartDist = null; });
 
-/* ---------- محرك معالجة الحفظ الذكي (حل جذري لرسائل الخطأ للأشجار الكبيرة) ---------- */
+/* ---------- محرك معالجة الحفظ النقية والنظيفة من الأشباح والظلال ---------- */
 
-// احتساب أفضل مقياس رندر آمن أوتوماتيكياً يضمن الدقة العالية وعدم تجاوز حدود المتصفح
 function calculateOptimalScale(element) {
   const width = element.offsetWidth;
   const height = element.offsetHeight;
-  
-  // الحد الأقصى الآمن للـ Canvas عبر كل الأجهزة والمتصفحات
   const MAX_SAFE_DIMENSION = 7500; 
-  
-  let targetScale = 3.0; // الدقة الافتراضية العالية للأشجار العادية
+  let targetScale = 3.0;
   const maxDim = Math.max(width, height);
   
   if (maxDim * targetScale > MAX_SAFE_DIMENSION) {
     targetScale = MAX_SAFE_DIMENSION / maxDim;
   }
-  
-  // لا يقل المقياس عن 1.0 لضمان القراءة بوضوح
   return Math.max(1.0, targetScale);
 }
 
@@ -782,7 +772,16 @@ async function renderCanvasSafely(canvasElement) {
     scale: dynamicScale,
     useCORS: true,
     logging: false,
-    allowTaint: true
+    allowTaint: true,
+    // تنظيف النسخة الملتقطة من أي ظلال تعوق معالجة html2canvas
+    onclone: (clonedDoc) => {
+      const allNodes = clonedDoc.querySelectorAll('.node, .flower-svg-bg, .node.male');
+      allNodes.forEach(node => {
+        node.style.boxShadow = 'none';
+        node.style.filter = 'none';
+        node.style.webkitFilter = 'none';
+      });
+    }
   });
 }
 
@@ -805,7 +804,6 @@ async function exportImage(evt){
     const canvasElement = document.getElementById('canvas');
     const capturedCanvas = await renderCanvasSafely(canvasElement);
 
-    // استخدام JPEG عالية الجودة عند الشجرات الكبيرة لتفادي انعدام الذاكرة
     const isLargeTree = (capturedCanvas.width > 4000 || capturedCanvas.height > 4000);
     const mimeType = isLargeTree ? 'image/jpeg' : 'image/png';
     const quality = isLargeTree ? 0.95 : 1.0;
