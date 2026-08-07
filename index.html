@@ -210,6 +210,8 @@
   /* ---------------- أشكال الأولاد MALE FRAMES ---------------- */
   .node.male{ color: var(--leaf-main); }
 
+  .node.male.f-serrated-leaf{ background: transparent; border: none; }
+
   .node.male.f-leaf{
     background: linear-gradient(145deg, #e4f2e0, #b2dbab);
     border: 4px solid var(--leaf-main);
@@ -281,7 +283,7 @@
     transform: translateY(-2px);
   }
 
-  .node .icon-top{ font-size: 36px; line-height: 1; margin-bottom: 2px; display: block; }
+  .node .icon-top{ font-size: 34px; line-height: 1; margin-bottom: 2px; display: block; }
   .node .name{
     font-size: 21px; font-weight: 900; line-height: 1.1;
     text-align: center; width: 100%; word-break: break-word; color: #000000;
@@ -446,6 +448,10 @@
 
     <!-- شبكة أشكال الأولاد -->
     <div id="maleFramesGrid" class="framesGrid">
+      <div class="frameOptionCard" id="m_card_f-serrated-leaf" onclick="selectMaleFrame('f-serrated-leaf')">
+        <div class="previewBox node male f-serrated-leaf" style="width:40px; height:40px;"><span style="font-size:16px;">🌿</span></div>
+        <span>ورقة مسننة مائلة</span>
+      </div>
       <div class="frameOptionCard" id="m_card_f-leaf" onclick="selectMaleFrame('f-leaf')">
         <div class="previewBox node male f-leaf" style="width:40px; height:40px;"><span style="font-size:16px;">🍃</span></div>
         <span>ورقة شجر</span>
@@ -470,7 +476,6 @@
 
     <!-- شبكة أشكال البنات -->
     <div id="femaleFramesGrid" class="framesGrid" style="display:none;">
-      <!-- الخيار الجديد: شكل القلب -->
       <div class="frameOptionCard" id="f_card_f-heart" onclick="selectFemaleFrame('f-heart')">
         <div class="previewBox node female f-heart" style="width:40px; height:40px;"><span style="font-size:16px;">❤️</span></div>
         <span>شكل قلب</span>
@@ -539,7 +544,7 @@
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     const swCode = `
-      const CACHE_NAME = 'family-tree-v17';
+      const CACHE_NAME = 'family-tree-v19';
       const urlsToCache = [
         './',
         'icon.png',
@@ -561,7 +566,7 @@ let isEditMode = false;
 let isInverted = false;
 
 // إعدادات نمط الإطارات الافتراضية والحفظ
-let currentMaleFrame = localStorage.getItem('familyTreeMaleFrame') || 'f-leaf';
+let currentMaleFrame = localStorage.getItem('familyTreeMaleFrame') || 'f-serrated-leaf';
 let currentFemaleFrame = localStorage.getItem('familyTreeFemaleFrame') || 'f-flower';
 
 function save(){ 
@@ -831,8 +836,40 @@ function renderNode(person){
   const badgeIcon = isMale ? '🍃' : '🌸';
 
   if(isMale) {
+    let svgBgHtml = '';
+    if (currentMaleFrame === 'f-serrated-leaf') {
+      // الرسم المائل والمطابق تماماً للصورة بخطوط متتالية وميلان دقيق
+      svgBgHtml = `
+        <svg class="flower-svg-bg" viewBox="0 0 100 100">
+          <defs>
+            <radialGradient id="grad_leaf_${person.id}" cx="45%" cy="45%" r="55%">
+              <stop offset="0%" stop-color="#ffffff" />
+              <stop offset="60%" stop-color="#d1f2c9" />
+              <stop offset="100%" stop-color="#3d8f30" />
+            </radialGradient>
+          </defs>
+          <g transform="rotate(-28 50 50)">
+            <path d="M 50 10 
+                     C 55 12, 60 14, 62 17 L 58 20 
+                     C 65 24, 70 28, 75 32 L 69 35 
+                     C 77 40, 82 46, 86 52 L 78 55 
+                     C 83 62, 85 70, 82 78 L 73 78 
+                     C 70 82, 62 87, 52 87 
+                     L 52 95 L 42 95 L 42 87 
+                     C 32 87, 24 82, 21 78 L 12 78 
+                     C 9 70, 11 62, 16 55 L 8 52 
+                     C 12 46, 17 40, 25 35 L 19 32 
+                     C 24 28, 29 24, 36 20 L 32 17 
+                     C 34 14, 39 12, 44 10 Z" 
+                  fill="url(#grad_leaf_${person.id})" stroke="#144211" stroke-width="3.5" stroke-linejoin="round" />
+          </g>
+        </svg>
+      `;
+    }
+
     return `
       <div class="node male ${currentMaleFrame}" onclick="openActionMenu('${person.id}')">
+        ${svgBgHtml}
         <div class="node-content">
           <div class="icon-top">${badgeIcon}</div>
           <div class="name">${escapeHtml(person.name)}</div>
@@ -841,7 +878,7 @@ function renderNode(person){
       ${childrenHtml}
     `;
   } else {
-    // توليد خلفيات SVG الخاصة بالوردة أو القلب
+    // خلفيات الإناث (الوردة والقلب)
     let svgBgHtml = '';
     if (currentFemaleFrame === 'f-flower') {
       svgBgHtml = `
