@@ -131,7 +131,6 @@
     padding-top: 34px;
   }
 
-  /* الخط العمودي النازل من الأب */
   .tree ul::before{
     content: "";
     position: absolute; top: 0; left: 50%;
@@ -266,6 +265,15 @@
   .moveRow{ display: flex; gap: 8px; }
   .moveRow button{ flex: 1; color: var(--ink); border: 1px solid var(--gold); }
 
+  /* Image Preview Modal for iOS */
+  #imgModalBox{
+    background: var(--paper); border: 2px solid var(--gold);
+    border-radius: 12px; padding: 16px; width: 90%; max-width: 450px;
+    max-height: 85vh; display: flex; flex-direction: column; align-items: center;
+    box-shadow: 0 10px 40px rgba(0,0,0,.4); gap: 12px; overflow-y: auto; text-align: center;
+  }
+  #imgModalBox img{ width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--gold); }
+
   #hint{
     position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
     font-size: 12px; opacity: 0.7; z-index: 40; background: var(--paper); padding: 4px 14px;
@@ -338,7 +346,6 @@
       <button id="addChildBtn" onclick="handleAddChildFromMenu()">➕ إضافة ابن / ابنة</button>
       <button class="secondary" style="color:var(--ink); border:1px solid var(--gold)" onclick="handleEditNameFromMenu()">✏️ تعديل الاسم</button>
       
-      <!-- أزرار إعادة الترتيب يميناً ويساراً -->
       <div class="moveRow" id="moveRow">
         <button class="secondary" id="moveLeftBtn" onclick="handleMoveSibling(-1)">⬅️ تحريك لليسار</button>
         <button class="secondary" id="moveRightBtn" onclick="handleMoveSibling(1)">تحريك لليمين ➡️</button>
@@ -349,6 +356,16 @@
     <div class="btnRow" style="justify-content:center; margin-top:16px;">
       <button class="cancel" onclick="closeModal('actionModalOverlay')">إغلاق</button>
     </div>
+  </div>
+</div>
+
+<!-- Modal Image Preview for iOS -->
+<div class="modalOverlay" id="imgModalOverlay">
+  <div class="modalBox" id="imgModalBox">
+    <h3 style="margin:0; font-size:16px; color:var(--teal)">معاينة الصورة</h3>
+    <p style="margin:0; font-weight:700; font-size:13px; color:var(--ink)">اضغط على الصورة ضغطة مطولة ثم اختر <b>(حفظ في الصور)</b></p>
+    <img id="previewImg" src="" alt="شجرة العائلة">
+    <button onclick="closeModal('imgModalOverlay')" style="width:100%">إغلاق</button>
   </div>
 </div>
 
@@ -422,19 +439,16 @@ function openActionMenu(id){
   const canHaveChildren = p.gender === 'm' || p === data;
   document.getElementById('addChildBtn').style.display = canHaveChildren ? 'block' : 'none';
 
-  // التحكم في أزرار التحريك يميناً ويساراً
   const parent = getParentPerson(data, id);
   const moveRow = document.getElementById('moveRow');
 
   if(!parent){
-    // الجد الأول ليس له إخوة
     moveRow.style.display = 'none';
   } else {
     moveRow.style.display = 'flex';
     const siblings = parent.children;
     const idx = siblings.findIndex(c => c.id === id);
 
-    // تعطيل الأزرار عند الوصول للطرف
     document.getElementById('moveLeftBtn').disabled = (idx === 0);
     document.getElementById('moveRightBtn').disabled = (idx === siblings.length - 1);
   }
@@ -451,14 +465,13 @@ function handleMoveSibling(direction){
   const targetIdx = idx + direction;
 
   if(targetIdx >= 0 && targetIdx < siblings.length){
-    // تبديل المكان في مصفوفة الأطفال
     const temp = siblings[idx];
     siblings[idx] = siblings[targetIdx];
     siblings[targetIdx] = temp;
 
     save();
     render();
-    openActionMenu(selectedPersonId); // تحديث حالة الأزرار
+    openActionMenu(selectedPersonId);
   }
 }
 
@@ -608,11 +621,11 @@ viewport.addEventListener('touchmove', e => {
 }, {passive: false});
 viewport.addEventListener('touchend', () => { dragging = false; touchStartDist = null; });
 
-/* ---------- Export & Import ---------- */
+/* ---------- Export & Import (iOS Friendly) ---------- */
 async function exportImage(evt){
   if(!data){ alert('لا توجد بيانات لحفظها'); return; }
   if(typeof html2canvas === 'undefined'){
-    alert('يرجى فتح الملف في متصفح يدعم تصدير الصور');
+    alert('ويرجى تحديث الصفحة أو فتحها في Safari');
     return;
   }
 
@@ -632,13 +645,37 @@ async function exportImage(evt){
       useCORS: true
     });
 
-    const imgDataUrl = capturedCanvas.toDataURL('image/png');
-    const link = document.createElement('a');
-    link.download = 'شجرة_العائلة.png';
-    link.href = imgDataUrl;
-    link.click();
+    capturedCanvas.toBlob(async (blob) => {
+      if (!blob) {
+        alert('حدث خطأ أثناء معالجة الصورة');
+        return;
+      }
+
+      // 1. تجربة مشاركة الصورة مباشرة عبر قائمة مشاركة الآيفون الأصلية
+      const file = new File([blob], 'شجرة_العائلة.png', { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: 'شجرة العائلة',
+            text: 'صورة شجرة العائلة'
+          });
+          return;
+        } catch (shareErr) {
+          if (shareErr.name === 'AbortError') return; // إلغاء المستخدم
+        }
+      }
+
+      // 2. إذا لم تتوفر المشاركة المباشرة، نعرض الصورة في نافذة مع إمكانية الضغط المطول
+      const imgDataUrl = URL.createObjectURL(blob);
+      document.getElementById('previewImg').src = imgDataUrl;
+      document.getElementById('imgModalOverlay').classList.add('show');
+
+    }, 'image/png');
+
   } catch(err) {
     alert('حدث خطأ أثناء حفظ الصورة');
+    console.error(err);
   } finally {
     scale = oldScale; panX = oldPanX; panY = oldPanY;
     applyTransform();
