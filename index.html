@@ -136,7 +136,7 @@
     width: max-content;
   }
 
-  /* Tree Structural Lines (السماكة 8px) */
+  /* Tree Structural Lines */
   .tree, .tree ul{
     list-style: none; margin: 0; padding: 0;
     display: flex; justify-content: center;
@@ -144,16 +144,10 @@
     transition: transform 0.3s ease-in-out;
   }
 
-  /* نمط قلب الشجرة رأسياً (من الأسفل للأعلى) */
-  .tree.inverted {
-    transform: scaleY(-1);
-  }
-  .tree.inverted .node {
-    transform: scaleY(-1);
-  }
-  .tree.inverted .node:hover {
-    transform: scaleY(-1) scale(1.04);
-  }
+  /* قلب الشجرة */
+  .tree.inverted { transform: scaleY(-1); }
+  .tree.inverted .node { transform: scaleY(-1); }
+  .tree.inverted .node:hover { transform: scaleY(-1) scale(1.04); }
 
   .tree ul{
     position: relative;
@@ -199,40 +193,77 @@
   .tree ul li:only-child{ padding-top: 36px; }
   .tree ul li:only-child::before{ display: none; }
   .tree ul li:only-child::after{ 
-    left: 50%; 
-    width: 0; 
-    border-top: none; 
-    border-left-width: 8px;
-    transform: translateX(-50%);
+    left: 50%; width: 0; border-top: none; 
+    border-left-width: 8px; transform: translateX(-50%);
   }
 
   /* تصميم الأفراد الأساسي */
   .node{
-    width: 135px;
-    height: 135px;
-    position: relative;
-    z-index: 2;
-    display: inline-flex;
-    align-items: center; justify-content: center;
-    direction: rtl;
-    cursor: pointer;
-    box-sizing: border-box;
+    width: 135px; height: 135px;
+    position: relative; z-index: 2;
+    display: inline-flex; align-items: center; justify-content: center;
+    direction: rtl; cursor: pointer; box-sizing: border-box;
     transition: transform 0.2s ease;
   }
   .node:hover{ transform: scale(1.04); }
 
-  /* 🍃 تصميم الولد (ورقة الشجر) */
-  .node.male{
-    color: var(--leaf-main);
+  /* ---------------- أشكال الأولاد MALE FRAMES ---------------- */
+  .node.male{ color: var(--leaf-main); }
+
+  .node.male.f-leaf{
     background: linear-gradient(145deg, #e4f2e0, #b2dbab);
     border: 4px solid var(--leaf-main);
     border-radius: 4px 52px 4px 52px;
   }
+  .node.male.f-shield{
+    background: linear-gradient(180deg, #e4f2e0, #abd8a3);
+    border: 4px solid var(--leaf-main);
+    border-radius: 18px 18px 68px 68px;
+  }
+  .node.male.f-rect{
+    background: linear-gradient(145deg, #e8f5e5, #b8e2b3);
+    border: 4px solid var(--leaf-main);
+    border-radius: 14px;
+    box-shadow: inset 0 0 0 2px #ffffff66;
+  }
+  .node.male.f-seal{
+    background: linear-gradient(145deg, #e4f2e0, #9ecf97);
+    border: 5px double var(--leaf-main);
+    border-radius: 50%;
+  }
+  .node.male.f-diamond{
+    background: linear-gradient(145deg, #e4f2e0, #b2dbab);
+    border: 4px solid var(--leaf-main);
+    border-radius: 40px 8px 40px 8px;
+  }
 
-  /* 🌸 تصميم البنت (الوردة) */
-  .node.female{
-    background: transparent;
-    border: none;
+  /* ---------------- أشكال البنات FEMALE FRAMES ---------------- */
+  .node.female{ background: transparent; border: none; }
+
+  .node.female.f-flower, .node.female.f-heart{ background: transparent; }
+
+  .node.female.f-arch{
+    background: linear-gradient(180deg, #fdf0f4, #f7c3cf);
+    border: 4px solid var(--flower-main);
+    border-radius: 68px 68px 12px 12px;
+  }
+
+  .node.female.f-pendant{
+    background: linear-gradient(145deg, #ffffff, #fad4dd);
+    border: 5px double var(--flower-main);
+    border-radius: 50%;
+  }
+
+  .node.female.f-oval{
+    background: linear-gradient(145deg, #fdf0f4, #f2b3c2);
+    border: 4px solid var(--flower-main);
+    border-radius: 50% / 40%;
+  }
+
+  .node.female.f-soft-diamond{
+    background: linear-gradient(145deg, #fdf0f4, #f2b3c2);
+    border: 4px solid var(--flower-main);
+    border-radius: 8px 40px 8px 40px;
   }
 
   .flower-svg-bg{
@@ -247,28 +278,14 @@
     align-items: center; justify-content: center;
     width: 100%; height: 100%;
     padding: 2px 6px 14px 6px;
-    transform: translateY(-4px);
+    transform: translateY(-2px);
   }
 
-  /* الأيقونة */
-  .node .icon-top{
-    font-size: 40px;
-    line-height: 1;
-    margin-bottom: 2px;
-    display: block;
-  }
-
-  /* الاسم */
+  .node .icon-top{ font-size: 36px; line-height: 1; margin-bottom: 2px; display: block; }
   .node .name{
-    font-size: 22px;
-    font-weight: 900;
-    line-height: 1.1;
-    text-align: center;
-    width: 100%;
-    word-break: break-word;
-    color: #000000;
-    letter-spacing: normal !important;
-    font-feature-settings: "liga" 1, "calt" 1;
+    font-size: 21px; font-weight: 900; line-height: 1.1;
+    text-align: center; width: 100%; word-break: break-word; color: #000000;
+    letter-spacing: normal !important; font-feature-settings: "liga" 1, "calt" 1;
   }
 
   /* Empty state */
@@ -288,15 +305,14 @@
 
   .modalBox{
     background: var(--paper); border: 2.5px solid var(--gold);
-    border-radius: 12px; padding: 24px 26px; width: 330px; max-width: 90%;
+    border-radius: 12px; padding: 22px 24px; width: 340px; max-width: 92%;
     box-shadow: 0 12px 45px rgba(0,0,0,.5);
   }
-  .modalBox h3{ margin: 0 0 16px; color: var(--teal); font-size: 20px; font-weight: 900; }
+  .modalBox h3{ margin: 0 0 14px; color: var(--teal); font-size: 20px; font-weight: 900; }
   .modalBox label{ display: block; font-size: 14px; margin: 12px 0 5px; opacity: 0.95; font-weight: 800; }
   .modalBox input[type=text]{
     width: 100%; padding: 10px 12px; border-radius: 6px; border: 2px solid #a87c22aa;
-    font-family: inherit; font-size: 15px; background: #fffdf6; font-weight: 700;
-    outline: none;
+    font-family: inherit; font-size: 15px; background: #fffdf6; font-weight: 700; outline: none;
   }
 
   .genderRow{ display: flex; gap: 10px; margin-top: 6px; }
@@ -309,6 +325,25 @@
 
   .btnRow{ display: flex; gap: 8px; margin-top: 20px; justify-content: flex-end; }
   .btnRow button.cancel{ background: transparent; border: 1.5px solid #a87c22aa; color: var(--ink); }
+
+  /* Frame Selector Modal Grid */
+  .frameTabs{ display: flex; gap: 6px; margin-bottom: 14px; border-bottom: 2px solid var(--gold); padding-bottom: 8px; }
+  .frameTabs button{ flex: 1; padding: 8px; font-size: 13px; background: transparent; color: var(--ink); border: 1px solid var(--gold); }
+  .frameTabs button.active{ background: var(--gold); color: #fff; }
+
+  .framesGrid{
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; max-height: 270px; overflow-y: auto; padding: 4px;
+  }
+  .frameOptionCard{
+    border: 2px solid #a87c2288; border-radius: 8px; padding: 10px 6px; display: flex;
+    flex-direction: column; align-items: center; justify-content: center; cursor: pointer;
+    background: #fffdf6; transition: transform 0.15s, border-color 0.15s;
+  }
+  .frameOptionCard:hover, .frameOptionCard.selected{
+    border-color: var(--gold); background: #fdf6e7; transform: scale(1.03); box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+  }
+  .frameOptionCard .previewBox{ width: 45px; height: 45px; margin-bottom: 6px; display: flex; align-items: center; justify-content: center; }
+  .frameOptionCard span{ font-size: 12px; font-weight: 800; color: var(--teal); }
 
   /* Action Popup Menu */
   .actionMenuBox{ text-align: center; }
@@ -351,8 +386,8 @@
     <button onclick="zoomBy(1.2)">تكبير +</button>
     <button onclick="zoomBy(0.8)">تصغير −</button>
     <button class="secondary" onclick="resetView()">توسيط</button>
-    <!-- زر قلب اتجاه الشجرة -->
     <button class="secondary" onclick="toggleTreeOrientation()">قلب الاتجاه ↕️</button>
+    <button class="secondary" onclick="openFramesModal()">تغيير الإطارات 🖼️</button>
     <button class="secondary" onclick="exportImage(event)">حفظ صورة HQ 📷</button>
     <button class="secondary" onclick="exportPDF(event)">حفظ PDF 📄</button>
     <button class="secondary" onclick="exportData()">تصدير</button>
@@ -399,6 +434,75 @@
   </div>
 </div>
 
+<!-- Modal Frame Selector -->
+<div class="modalOverlay" id="framesModalOverlay">
+  <div class="modalBox" style="width: 380px;">
+    <h3>اختيار شكل الإطارات</h3>
+    
+    <div class="frameTabs">
+      <button id="tabMaleBtn" class="active" onclick="switchFrameTab('m')">إطارات الأولاد 🍃</button>
+      <button id="tabFemaleBtn" onclick="switchFrameTab('f')">إطارات البنات 🌸</button>
+    </div>
+
+    <!-- شبكة أشكال الأولاد -->
+    <div id="maleFramesGrid" class="framesGrid">
+      <div class="frameOptionCard" id="m_card_f-leaf" onclick="selectMaleFrame('f-leaf')">
+        <div class="previewBox node male f-leaf" style="width:40px; height:40px;"><span style="font-size:16px;">🍃</span></div>
+        <span>ورقة شجر</span>
+      </div>
+      <div class="frameOptionCard" id="m_card_f-shield" onclick="selectMaleFrame('f-shield')">
+        <div class="previewBox node male f-shield" style="width:40px; height:40px;"><span style="font-size:16px;">🛡️</span></div>
+        <span>درع تراثي</span>
+      </div>
+      <div class="frameOptionCard" id="m_card_f-rect" onclick="selectMaleFrame('f-rect')">
+        <div class="previewBox node male f-rect" style="width:40px; height:40px;"><span style="font-size:16px;">👑</span></div>
+        <span>مستطيل ملكي</span>
+      </div>
+      <div class="frameOptionCard" id="m_card_f-seal" onclick="selectMaleFrame('f-seal')">
+        <div class="previewBox node male f-seal" style="width:40px; height:40px;"><span style="font-size:16px;">📜</span></div>
+        <span>ختم عربي</span>
+      </div>
+      <div class="frameOptionCard" id="m_card_f-diamond" onclick="selectMaleFrame('f-diamond')">
+        <div class="previewBox node male f-diamond" style="width:40px; height:40px;"><span style="font-size:16px;">💎</span></div>
+        <span>معين زمردي</span>
+      </div>
+    </div>
+
+    <!-- شبكة أشكال البنات -->
+    <div id="femaleFramesGrid" class="framesGrid" style="display:none;">
+      <!-- الخيار الجديد: شكل القلب -->
+      <div class="frameOptionCard" id="f_card_f-heart" onclick="selectFemaleFrame('f-heart')">
+        <div class="previewBox node female f-heart" style="width:40px; height:40px;"><span style="font-size:16px;">❤️</span></div>
+        <span>شكل قلب</span>
+      </div>
+      <div class="frameOptionCard" id="f_card_f-flower" onclick="selectFemaleFrame('f-flower')">
+        <div class="previewBox node female f-flower" style="width:40px; height:40px;"><span style="font-size:16px;">🌸</span></div>
+        <span>وردة هندسية</span>
+      </div>
+      <div class="frameOptionCard" id="f_card_f-arch" onclick="selectFemaleFrame('f-arch')">
+        <div class="previewBox node female f-arch" style="width:40px; height:40px;"><span style="font-size:16px;">🏛️</span></div>
+        <span>قوس أندلسي</span>
+      </div>
+      <div class="frameOptionCard" id="f_card_f-pendant" onclick="selectFemaleFrame('f-pendant')">
+        <div class="previewBox node female f-pendant" style="width:40px; height:40px;"><span style="font-size:16px;">📿</span></div>
+        <span>قلادة ملكية</span>
+      </div>
+      <div class="frameOptionCard" id="f_card_f-oval" onclick="selectFemaleFrame('f-oval')">
+        <div class="previewBox node female f-oval" style="width:40px; height:40px;"><span style="font-size:16px;">🎀</span></div>
+        <span>بيضاوي أنيق</span>
+      </div>
+      <div class="frameOptionCard" id="f_card_f-soft-diamond" onclick="selectFemaleFrame('f-soft-diamond')">
+        <div class="previewBox node female f-soft-diamond" style="width:40px; height:40px;"><span style="font-size:16px;">🌺</span></div>
+        <span>وردة مائلة</span>
+      </div>
+    </div>
+
+    <div class="btnRow">
+      <button onclick="closeModal('framesModalOverlay')">إغلاق وتطبيق</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal Card Actions Menu -->
 <div class="modalOverlay" id="actionModalOverlay">
   <div class="modalBox actionMenuBox">
@@ -435,7 +539,7 @@
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     const swCode = `
-      const CACHE_NAME = 'family-tree-v15';
+      const CACHE_NAME = 'family-tree-v17';
       const urlsToCache = [
         './',
         'icon.png',
@@ -454,19 +558,70 @@ if ('serviceWorker' in navigator) {
 let data = JSON.parse(localStorage.getItem('familyTreeDataFlowerSVG') || 'null');
 let selectedPersonId = null;
 let isEditMode = false;
-let isInverted = false; // حالة قلب اتجاه الشجرة
+let isInverted = false;
 
-function save(){ localStorage.setItem('familyTreeDataFlowerSVG', JSON.stringify(data)); }
+// إعدادات نمط الإطارات الافتراضية والحفظ
+let currentMaleFrame = localStorage.getItem('familyTreeMaleFrame') || 'f-leaf';
+let currentFemaleFrame = localStorage.getItem('familyTreeFemaleFrame') || 'f-flower';
+
+function save(){ 
+  localStorage.setItem('familyTreeDataFlowerSVG', JSON.stringify(data));
+  localStorage.setItem('familyTreeMaleFrame', currentMaleFrame);
+  localStorage.setItem('familyTreeFemaleFrame', currentFemaleFrame);
+}
 function uid(){ return 'p_' + Math.random().toString(36).slice(2,10); }
 
 function closeModal(id){
   document.getElementById(id).classList.remove('show');
 }
 
-/* ---------- دالة قلب الاتجاه ---------- */
 function toggleTreeOrientation(){
   isInverted = !isInverted;
   render();
+}
+
+/* ---------- إدارة نافذة الإطارات ---------- */
+function openFramesModal(){
+  updateFrameSelectionsUI();
+  document.getElementById('framesModalOverlay').classList.add('show');
+}
+
+function switchFrameTab(type){
+  const maleTab = document.getElementById('tabMaleBtn');
+  const femaleTab = document.getElementById('tabFemaleBtn');
+  const maleGrid = document.getElementById('maleFramesGrid');
+  const femaleGrid = document.getElementById('femaleFramesGrid');
+
+  if(type === 'm'){
+    maleTab.classList.add('active'); femaleTab.classList.remove('active');
+    maleGrid.style.display = 'grid'; femaleGrid.style.display = 'none';
+  } else {
+    femaleTab.classList.add('active'); maleTab.classList.remove('active');
+    femaleGrid.style.display = 'grid'; maleGrid.style.display = 'none';
+  }
+}
+
+function selectMaleFrame(frameClass){
+  currentMaleFrame = frameClass;
+  save(); render();
+  updateFrameSelectionsUI();
+}
+
+function selectFemaleFrame(frameClass){
+  currentFemaleFrame = frameClass;
+  save(); render();
+  updateFrameSelectionsUI();
+}
+
+function updateFrameSelectionsUI(){
+  document.querySelectorAll('#maleFramesGrid .frameOptionCard').forEach(c => c.classList.remove('selected'));
+  document.querySelectorAll('#femaleFramesGrid .frameOptionCard').forEach(c => c.classList.remove('selected'));
+
+  const mCard = document.getElementById(`m_card_${currentMaleFrame}`);
+  if(mCard) mCard.classList.add('selected');
+
+  const fCard = document.getElementById(`f_card_${currentFemaleFrame}`);
+  if(fCard) fCard.classList.add('selected');
 }
 
 function openAddModal(parentId, edit = false){
@@ -660,7 +815,6 @@ function render(){
   }
   empty.style.display = 'none';
   
-  // تفعيل أو إلغاء فئة inverted حسب الحالة
   const treeClass = isInverted ? "tree inverted" : "tree";
   canvas.innerHTML = `<ul class="${treeClass}"><li>${renderNode(data)}</li></ul>`;
 }
@@ -678,7 +832,7 @@ function renderNode(person){
 
   if(isMale) {
     return `
-      <div class="node male" onclick="openActionMenu('${person.id}')">
+      <div class="node male ${currentMaleFrame}" onclick="openActionMenu('${person.id}')">
         <div class="node-content">
           <div class="icon-top">${badgeIcon}</div>
           <div class="name">${escapeHtml(person.name)}</div>
@@ -687,8 +841,10 @@ function renderNode(person){
       ${childrenHtml}
     `;
   } else {
-    return `
-      <div class="node female" onclick="openActionMenu('${person.id}')">
+    // توليد خلفيات SVG الخاصة بالوردة أو القلب
+    let svgBgHtml = '';
+    if (currentFemaleFrame === 'f-flower') {
+      svgBgHtml = `
         <svg class="flower-svg-bg" viewBox="0 0 100 100">
           <defs>
             <radialGradient id="grad_${person.id}" cx="50%" cy="50%" r="50%">
@@ -700,6 +856,26 @@ function renderNode(person){
           <path d="${flowerOuterPath}" fill="url(#grad_${person.id})" stroke="#6e162d" stroke-width="3.5" stroke-linejoin="round" />
           <path d="${flowerInnerPath}" fill="none" stroke="#6e162d" stroke-width="1.8" stroke-linejoin="round" />
         </svg>
+      `;
+    } else if (currentFemaleFrame === 'f-heart') {
+      svgBgHtml = `
+        <svg class="flower-svg-bg" viewBox="0 0 100 100">
+          <defs>
+            <radialGradient id="grad_h_${person.id}" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#ffffff" />
+              <stop offset="60%" stop-color="#fde0e7" />
+              <stop offset="100%" stop-color="#f1abbd" />
+            </radialGradient>
+          </defs>
+          <path d="M 50 90 C 20 68 5 48 5 30 C 5 14 17 4 32 4 C 41 4 47 9 50 14 C 53 9 59 4 68 4 C 83 4 95 14 95 30 C 95 48 80 68 50 90 Z" 
+                fill="url(#grad_h_${person.id})" stroke="#6e162d" stroke-width="3.8" stroke-linejoin="round" />
+        </svg>
+      `;
+    }
+
+    return `
+      <div class="node female ${currentFemaleFrame}" onclick="openActionMenu('${person.id}')">
+        ${svgBgHtml}
         <div class="node-content">
           <div class="icon-top">${badgeIcon}</div>
           <div class="name">${escapeHtml(person.name)}</div>
