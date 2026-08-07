@@ -6,6 +6,8 @@
 <title>شجرة العائلة</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Amiri+Quran&display=swap" rel="stylesheet">
+<!-- مكتبة تحويل العناصر إلى صورة -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
   :root{
     --ink:#241c14;
@@ -53,7 +55,6 @@
     display:flex; align-items:baseline; justify-content:space-between; gap:8px;
   }
 
-  /* main content area holds viewport + empty state, bounded by flex not 100vh */
   #main{
     position:relative;
     flex:1 1 auto;
@@ -114,14 +115,25 @@
     width:max-content;
   }
 
-  /* org-chart tree — geometry forced to LTR so left/right math stays
-     predictable regardless of the page's RTL direction; text inside
-     each card is reset back to RTL below. */
+  /* org-chart tree */
   .tree, .tree ul{
     list-style:none; margin:0; padding:0;
     display:flex; justify-content:center;
     direction:ltr;
   }
+
+  /* إضافة الخط النازل من الأب قبل التفرع الأفقي للأبناء */
+  .tree ul{
+    position:relative;
+    padding-top:34px;
+  }
+  .tree ul::before{
+    content:"";
+    position:absolute; top:0; left:50%;
+    width:0; height:34px;
+    border-left:2.5px solid var(--line);
+  }
+
   .tree > li{
     position:relative;
     display:flex; flex-direction:column; align-items:center;
@@ -134,8 +146,6 @@
     text-align:center;
   }
 
-  /* the two halves of the horizontal "bus" line above each card,
-     plus a vertical stub down into the card */
   .tree ul li::before,
   .tree ul li::after{
     content:"";
@@ -145,15 +155,12 @@
   }
   .tree ul li::after{
     right:auto; left:50%;
-    border-left:2.5px solid var(--line); /* vertical stub down to this card */
+    border-left:2.5px solid var(--line);
   }
 
-  /* trim the bus line so it doesn't overshoot the outermost siblings */
   .tree ul li:first-child::before{ border-top-color:transparent; }
   .tree ul li:last-child::after{ border-top-color:transparent; }
 
-  /* a single child still gets a gap and a plain vertical drop —
-     never sits flush against its parent */
   .tree ul li:only-child{ padding-top:34px; }
   .tree ul li:only-child::before{ display:none; }
   .tree ul li:only-child::after{ left:50%; width:0; border-top:none; border-left-width:2.5px; }
@@ -174,7 +181,6 @@
   }
   .card.male{ border-color:var(--male); }
 
-  /* daughters render as a circle — a visual leaf, no branch continues from her */
   .card.female{
     border-color:var(--female);
     border-radius:50%;
@@ -201,7 +207,6 @@
   }
   .card .actions button.del{ background:#8a3b3b; color:#f6efdd; }
 
-  /* empty state */
   #empty{
     position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
     flex-direction:column; gap:14px; text-align:center; padding:20px;
@@ -210,12 +215,11 @@
   #empty h2{ font-size:26px; color:var(--teal); margin:0; }
   #empty p{ max-width:420px; opacity:.75; line-height:1.9; margin:0; }
 
-  /* modal */
-  #modalOverlay{
+  #modalOverlay, #imgModalOverlay{
     position:fixed; inset:0; background:#14282699;
     display:none; align-items:center; justify-content:center; z-index:100;
   }
-  #modalOverlay.show{ display:flex; }
+  #modalOverlay.show, #imgModalOverlay.show{ display:flex; }
   #modal{
     background:var(--paper); border:2px solid var(--gold);
     border-radius:12px; padding:26px 28px; width:320px;
@@ -237,6 +241,15 @@
   #modal .btnRow{ display:flex; gap:8px; margin-top:20px; justify-content:flex-end; }
   #modal .btnRow button.cancel{ background:transparent; border:1px solid #b9902f66; color:var(--ink); }
 
+  /* Image Modal */
+  #imgModalBox{
+    background:var(--paper); border:2px solid var(--gold);
+    border-radius:12px; padding:16px; width:90%; max-width:500px;
+    max-height:85vh; display:flex; flex-direction:column; align-items:center;
+    box-shadow:0 10px 40px rgba(0,0,0,.4); gap:12px; overflow-y:auto;
+  }
+  #imgModalBox img{ width:100%; height:auto; border-radius:8px; border:1px solid var(--gold); }
+
   #hint{
     position:absolute; bottom:14px; left:50%; transform:translateX(-50%);
     font-size:12.5px; opacity:.55; z-index:40; background:var(--paper); padding:4px 12px; border-radius:20px;
@@ -255,6 +268,7 @@
     <button onclick="zoomBy(1.2)">تكبير +</button>
     <button onclick="zoomBy(0.8)">تصغير −</button>
     <button class="secondary" onclick="resetView()">توسيط</button>
+    <button class="secondary" onclick="exportImage(event)">حفظ صورة 📷</button>
     <button class="secondary" onclick="exportData()">تصدير</button>
     <label class="secondary" style="padding:5px 8px;font-size:11px;border-radius:6px;border:1px solid #d8b76866;cursor:pointer;white-space:nowrap;flex:0 1 auto;">
       استيراد
@@ -277,6 +291,7 @@
   <div id="hint">اسحب للتحريك • عجلة الفأرة للتكبير/التصغير</div>
 </div>
 
+<!-- Modal Add Person -->
 <div id="modalOverlay">
   <div id="modal">
     <h3 id="modalTitle">إضافة فرد</h3>
@@ -294,17 +309,22 @@
   </div>
 </div>
 
+<!-- Modal Image Preview -->
+<div id="imgModalOverlay">
+  <div id="imgModalBox">
+    <p style="margin:0;font-weight:700;color:var(--teal)">اضغط مطولاً على الصورة لحفظها في ألبوم الصور</p>
+    <img id="previewImg" src="" alt="شجرة العائلة">
+    <button onclick="closeImgModal()" style="width:100%">إغلاق</button>
+  </div>
+</div>
+
 <script>
-/* ---------- data ---------- */
-// each person: {id, name, gender:'m'|'f', children:[...] }  (children only meaningful for gender 'm', or root)
 let data = JSON.parse(localStorage.getItem('familyTreeData') || 'null');
 let pendingParentId = null;
 
 function save(){ localStorage.setItem('familyTreeData', JSON.stringify(data)); }
-
 function uid(){ return 'p_' + Math.random().toString(36).slice(2,10); }
 
-/* ---------- modal ---------- */
 function openModal(parentId){
   pendingParentId = parentId;
   document.getElementById('modalTitle').textContent = parentId ? 'إضافة ابن/ابنة' : 'إضافة الجد الأول';
@@ -322,7 +342,7 @@ function confirmAdd(){
   const person = {id:uid(), name, gender, children:[]};
 
   if(!pendingParentId){
-    data = person; // root
+    data = person;
   } else {
     const parent = findPerson(data, pendingParentId);
     if(parent){ parent.children.push(person); }
@@ -356,7 +376,6 @@ function findPerson(node, id){
   return null;
 }
 
-/* ---------- render ---------- */
 function render(){
   const canvas = document.getElementById('canvas');
   const empty = document.getElementById('empty');
@@ -370,7 +389,7 @@ function render(){
 }
 
 function renderNode(person){
-  const canHaveChildren = person.gender === 'm' || person === data; // root or male
+  const canHaveChildren = person.gender === 'm' || person === data;
   const genderLabel = person.gender === 'm' ? 'ذكر' : 'أنثى';
   const addBtn = canHaveChildren ? `<button onclick="openModal('${person.id}')">+ إضافة ابن/ابنة</button>` : '';
   const childrenHtml = (canHaveChildren && person.children && person.children.length)
@@ -393,7 +412,6 @@ function escapeHtml(s){
   return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
 
-/* ---------- zoom & pan ---------- */
 let scale = 1, panX = 0, panY = 0;
 const viewport = document.getElementById('viewport');
 const canvasEl = document.getElementById('canvas');
@@ -429,7 +447,6 @@ window.addEventListener('mousemove', e=>{
 });
 window.addEventListener('mouseup', ()=>{ dragging=false; viewport.classList.remove('grabbing'); });
 
-// touch support
 let touchStartDist=null, touchStartScale=1;
 viewport.addEventListener('touchstart', e=>{
   if(e.touches.length===1){
@@ -456,7 +473,52 @@ viewport.addEventListener('touchmove', e=>{
 }, {passive:false});
 viewport.addEventListener('touchend', ()=>{ dragging=false; touchStartDist=null; });
 
-/* ---------- import / export ---------- */
+/* Export Image Modal Functions */
+function closeImgModal(){ document.getElementById('imgModalOverlay').classList.remove('show'); }
+
+async function exportImage(evt){
+  if(!data){ alert('لا توجد بيانات لحفظها'); return; }
+  if(typeof html2canvas === 'undefined'){
+    alert('تطبیق المعاينة يمنع التحميل الخارجي، يرجى فتح الملف في متصفح Safari أو Chrome');
+    return;
+  }
+
+  const btn = evt ? evt.currentTarget : null;
+  const originalText = btn ? btn.textContent : '';
+  if(btn) btn.textContent = 'جاري التجهيز...';
+
+  const oldScale = scale, oldPanX = panX, oldPanY = panY;
+  scale = 1; panX = 0; panY = 0;
+  applyTransform();
+
+  try {
+    const canvasElement = document.getElementById('canvas');
+    const capturedCanvas = await html2canvas(canvasElement, {
+      backgroundColor: '#f6efdd',
+      scale: 2,
+      useCORS: true
+    });
+
+    const imgDataUrl = capturedCanvas.toDataURL('image/png');
+
+    const link = document.createElement('a');
+    link.download = 'شجرة_العائلة.png';
+    link.href = imgDataUrl;
+    link.click();
+
+    document.getElementById('previewImg').src = imgDataUrl;
+    document.getElementById('imgModalOverlay').classList.add('show');
+
+  } catch(err) {
+    alert('حدث خطأ أثناء حفظ الصورة');
+    console.error(err);
+  } finally {
+    scale = oldScale; panX = oldPanX; panY = oldPanY;
+    applyTransform();
+    if(btn) btn.textContent = originalText;
+  }
+}
+
 function exportData(){
   if(!data){ alert('لا توجد بيانات بعد'); return; }
   const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
@@ -478,7 +540,6 @@ document.getElementById('importFile').addEventListener('change', e=>{
   reader.readAsText(file);
 });
 
-/* ---------- init ---------- */
 applyTransform();
 render();
 </script>
