@@ -23,7 +23,10 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;800;900&display=swap" rel="stylesheet">
+
+<!-- مكتبات تصدير الصور و PDF عالية الجودة -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
   :root{
@@ -186,7 +189,7 @@
   .tree ul li:only-child::before{ display: none; }
   .tree ul li:only-child::after{ left: 50%; width: 0; border-top: none; border-left-width: 2.5px; }
 
-  /* تصميم الأفراد الأساسي - قياس موحد للولد والبنت */
+  /* تصميم الأفراد الأساسي */
   .node{
     width: 135px;
     height: 135px;
@@ -201,7 +204,7 @@
   }
   .node:hover{ transform: translateY(-3px) scale(1.03); }
 
-  /* 🍃 تصميم الولد (ورقة الشجر المائلة) */
+  /* 🍃 تصميم الولد (ورقة الشجر) */
   .node.male{
     color: var(--leaf-main);
     background: linear-gradient(145deg, #f2f8f0, #d3e8cf);
@@ -210,7 +213,7 @@
     box-shadow: 0 4px 10px rgba(0,0,0,0.12);
   }
 
-  /* 🌸 تصميم البنت (الوردة بالبتلات المتعددة) */
+  /* 🌸 تصميم البنت (الوردة) */
   .node.female{
     background: transparent;
     border: none;
@@ -227,29 +230,30 @@
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
     width: 100%; height: 100%;
-    padding: 8px;
+    padding: 12px 4px 6px 4px;
   }
 
   .node .icon-top{
-    font-size: 17px;
+    font-size: 22px;
     line-height: 1;
-    margin-top: -10px;
-    margin-bottom: 3px;
-    opacity: 0.95;
+    margin-top: 6px;
+    margin-bottom: 2px;
+    opacity: 1;
+    filter: drop-shadow(0 1px 1px rgba(0,0,0,0.15));
   }
 
   .node .name{
-    font-size: 19px;
+    font-size: 24px;
     font-weight: 900;
-    line-height: 1.1;
+    line-height: 1.2;
     text-align: center;
     width: 100%;
     word-break: break-word;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    padding: 0 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    padding: 0 2px 4px 2px;
     color: var(--ink);
   }
 
@@ -333,7 +337,8 @@
     <button onclick="zoomBy(1.2)">تكبير +</button>
     <button onclick="zoomBy(0.8)">تصغير −</button>
     <button class="secondary" onclick="resetView()">توسيط</button>
-    <button class="secondary" onclick="exportImage(event)">حفظ صورة 📷</button>
+    <button class="secondary" onclick="exportImage(event)">حفظ صورة HQ 📷</button>
+    <button class="secondary" onclick="exportPDF(event)">حفظ PDF 📄</button>
     <button class="secondary" onclick="exportData()">تصدير</button>
     <label class="secondary" style="padding:5px 8px;font-size:11px;border-radius:6px;border:1px solid #d8b76866;cursor:pointer;white-space:nowrap;">
       استيراد
@@ -402,7 +407,7 @@
 <!-- Modal Image Preview -->
 <div class="modalOverlay" id="imgModalOverlay">
   <div class="modalBox" id="imgModalBox">
-    <h3 style="margin:0; font-size:16px; color:var(--teal)">معاينة الصورة</h3>
+    <h3 style="margin:0; font-size:16px; color:var(--teal)">معاينة الصورة عالية الجودة</h3>
     <p style="margin:0; font-weight:700; font-size:13px; color:var(--ink)">اضغط على الصورة ضغطة مطولة ثم اختر <b>(حفظ في الصور)</b></p>
     <img id="previewImg" src="" alt="شجرة العائلة الورقية">
     <button onclick="closeModal('imgModalOverlay')" style="width:100%">إغلاق</button>
@@ -414,12 +419,13 @@
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     const swCode = `
-      const CACHE_NAME = 'family-tree-v2';
+      const CACHE_NAME = 'family-tree-v6';
       const urlsToCache = [
         './',
         'icon.png',
         'https://fonts.googleapis.com/css2?family=Cairo:wght@700;800;900&display=swap',
-        'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'
+        'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
+        'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'
       ];
       self.addEventListener('install', e => e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(urlsToCache))));
       self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));
@@ -747,7 +753,7 @@ viewport.addEventListener('touchmove', e => {
 }, {passive: false});
 viewport.addEventListener('touchend', () => { dragging = false; touchStartDist = null; });
 
-/* ---------- Export & Import ---------- */
+/* ---------- Exporting High-Quality Images & PDF ---------- */
 async function exportImage(evt){
   if(!data){ alert('لا توجد بيانات لحفظها'); return; }
   if(typeof html2canvas === 'undefined'){
@@ -765,10 +771,12 @@ async function exportImage(evt){
 
   try {
     const canvasElement = document.getElementById('canvas');
+    // رفع المقياس لـ 4 لضمان أعلى دقة ووضوح
     const capturedCanvas = await html2canvas(canvasElement, {
       backgroundColor: '#f6efdd',
-      scale: 2,
-      useCORS: true
+      scale: 4,
+      useCORS: true,
+      logging: false
     });
 
     capturedCanvas.toBlob(async (blob) => {
@@ -783,7 +791,7 @@ async function exportImage(evt){
           await navigator.share({
             files: [file],
             title: 'شجرة العائلة الورقية',
-            text: 'صورة شجرة العائلة الورقية'
+            text: 'صورة شجرة العائلة الورقية عالية الجودة'
           });
           return;
         } catch (shareErr) {
@@ -795,10 +803,61 @@ async function exportImage(evt){
       document.getElementById('previewImg').src = imgDataUrl;
       document.getElementById('imgModalOverlay').classList.add('show');
 
-    }, 'image/png');
+    }, 'image/png', 1.0);
 
   } catch(err) {
     alert('حدث خطأ أثناء حفظ الصورة');
+    console.error(err);
+  } finally {
+    scale = oldScale; panX = oldPanX; panY = oldPanY;
+    applyTransform();
+    if(btn) btn.textContent = originalText;
+  }
+}
+
+async function exportPDF(evt){
+  if(!data){ alert('لا توجد بيانات لحفظها'); return; }
+  if(typeof html2canvas === 'undefined' || !window.jspdf){
+    alert('يرجى الاتصال بالنت للتحقق من تحميل مكتبات التصدير (html2canvas & jsPDF)');
+    return;
+  }
+
+  const btn = evt ? evt.currentTarget : null;
+  const originalText = btn ? btn.textContent : '';
+  if(btn) btn.textContent = 'جاري تجهيز الـ PDF...';
+
+  const oldScale = scale, oldPanX = panX, oldPanY = panY;
+  scale = 1; panX = 0; panY = 0;
+  applyTransform();
+
+  try {
+    const canvasElement = document.getElementById('canvas');
+    const capturedCanvas = await html2canvas(canvasElement, {
+      backgroundColor: '#f6efdd',
+      scale: 3,
+      useCORS: true,
+      logging: false
+    });
+
+    const imgData = capturedCanvas.toDataURL('image/png', 1.0);
+    const { jsPDF } = window.jspdf;
+
+    const width = capturedCanvas.width;
+    const height = capturedCanvas.height;
+    const orientation = width > height ? 'l' : 'p';
+
+    // إنشاء PDF بعرض وارتفاع أبعاد الصورة لتفادي القص والهوامش
+    const pdf = new jsPDF({
+      orientation: orientation,
+      unit: 'px',
+      format: [width, height]
+    });
+
+    pdf.addImage(imgData, 'PNG', 0, 0, width, height);
+    pdf.save('شجرة_العائلة_الورقية.pdf');
+
+  } catch(err) {
+    alert('حدث خطأ أثناء تصدير ملف الـ PDF');
     console.error(err);
   } finally {
     scale = oldScale; panX = oldPanX; panY = oldPanY;
