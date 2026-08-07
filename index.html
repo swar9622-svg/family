@@ -136,11 +136,23 @@
     width: max-content;
   }
 
-  /* Tree Structural Lines (مضاعفة السماكة للضعف 8px) */
+  /* Tree Structural Lines (السماكة 8px) */
   .tree, .tree ul{
     list-style: none; margin: 0; padding: 0;
     display: flex; justify-content: center;
     direction: ltr;
+    transition: transform 0.3s ease-in-out;
+  }
+
+  /* نمط قلب الشجرة رأسياً (من الأسفل للأعلى) */
+  .tree.inverted {
+    transform: scaleY(-1);
+  }
+  .tree.inverted .node {
+    transform: scaleY(-1);
+  }
+  .tree.inverted .node:hover {
+    transform: scaleY(-1) scale(1.04);
   }
 
   .tree ul{
@@ -152,7 +164,7 @@
     content: "";
     position: absolute; top: 0; left: 50%;
     width: 0; height: 36px;
-    border-left: 8px solid var(--line); /* تم زيادة السماكة لـ 8px */
+    border-left: 8px solid var(--line);
     transform: translateX(-50%);
   }
 
@@ -174,11 +186,11 @@
     content: "";
     position: absolute; top: 0; right: 50%;
     width: 50%; height: 36px;
-    border-top: 8px solid var(--line); /* تم زيادة السماكة لـ 8px */
+    border-top: 8px solid var(--line);
   }
   .tree ul li::after{
     right: auto; left: 50%;
-    border-left: 8px solid var(--line); /* تم زيادة السماكة لـ 8px */
+    border-left: 8px solid var(--line);
   }
 
   .tree ul li:first-child::before{ border-top-color: transparent; }
@@ -190,7 +202,7 @@
     left: 50%; 
     width: 0; 
     border-top: none; 
-    border-left-width: 8px; /* تم زيادة السماكة لـ 8px */
+    border-left-width: 8px;
     transform: translateX(-50%);
   }
 
@@ -205,6 +217,7 @@
     direction: rtl;
     cursor: pointer;
     box-sizing: border-box;
+    transition: transform 0.2s ease;
   }
   .node:hover{ transform: scale(1.04); }
 
@@ -338,6 +351,8 @@
     <button onclick="zoomBy(1.2)">تكبير +</button>
     <button onclick="zoomBy(0.8)">تصغير −</button>
     <button class="secondary" onclick="resetView()">توسيط</button>
+    <!-- زر قلب اتجاه الشجرة -->
+    <button class="secondary" onclick="toggleTreeOrientation()">قلب الاتجاه ↕️</button>
     <button class="secondary" onclick="exportImage(event)">حفظ صورة HQ 📷</button>
     <button class="secondary" onclick="exportPDF(event)">حفظ PDF 📄</button>
     <button class="secondary" onclick="exportData()">تصدير</button>
@@ -416,11 +431,11 @@
 </div>
 
 <script>
-/* ---------- تسجيل Service Worker للعمل بدون إنترنت ---------- */
+/* ---------- تسجيل Service Worker ---------- */
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     const swCode = `
-      const CACHE_NAME = 'family-tree-v14';
+      const CACHE_NAME = 'family-tree-v15';
       const urlsToCache = [
         './',
         'icon.png',
@@ -439,12 +454,19 @@ if ('serviceWorker' in navigator) {
 let data = JSON.parse(localStorage.getItem('familyTreeDataFlowerSVG') || 'null');
 let selectedPersonId = null;
 let isEditMode = false;
+let isInverted = false; // حالة قلب اتجاه الشجرة
 
 function save(){ localStorage.setItem('familyTreeDataFlowerSVG', JSON.stringify(data)); }
 function uid(){ return 'p_' + Math.random().toString(36).slice(2,10); }
 
 function closeModal(id){
   document.getElementById(id).classList.remove('show');
+}
+
+/* ---------- دالة قلب الاتجاه ---------- */
+function toggleTreeOrientation(){
+  isInverted = !isInverted;
+  render();
 }
 
 function openAddModal(parentId, edit = false){
@@ -594,7 +616,7 @@ function findPerson(node, id){
   return null;
 }
 
-/* ---------- دالة توليد زهرة هندسية ممتدة ---------- */
+/* ---------- دالة توليد زهرة هندسية ---------- */
 function generateFlowerSVGPath(cx, cy, rInner, rOuter, petals) {
   let d = "";
   const step = (Math.PI * 2) / petals;
@@ -637,7 +659,10 @@ function render(){
     return;
   }
   empty.style.display = 'none';
-  canvas.innerHTML = `<ul class="tree"><li>${renderNode(data)}</li></ul>`;
+  
+  // تفعيل أو إلغاء فئة inverted حسب الحالة
+  const treeClass = isInverted ? "tree inverted" : "tree";
+  canvas.innerHTML = `<ul class="${treeClass}"><li>${renderNode(data)}</li></ul>`;
 }
 
 function renderNode(person){
